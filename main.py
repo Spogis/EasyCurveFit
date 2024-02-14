@@ -101,7 +101,6 @@ simple_layout = html.Div([
             {'label': 'Generalized Logistic Function - Richards Curve', 'value': 'Generalized Logistic Function - Richards Curve'},
             {'label': 'Granulometric Distribution', 'value': 'Granulometric Distribution'},
             {'label': 'Nagata', 'value': 'Nagata'},
-            #{'label': 'Arrhenius', 'value': 'Arrhenius'},
            ],
         value='Custom Model',
         multi=False,
@@ -114,7 +113,7 @@ simple_layout = html.Div([
                 options=[
                     {'label': 'Only Positive Parameters', 'value': 'True'}
                 ],
-                value=[],
+                value=['True'],
             )
         ], style={'margin-right': '20px'}),  # Adiciona margem à direita para este div
 
@@ -124,7 +123,7 @@ simple_layout = html.Div([
                 options=[
                     {'label': 'X-axis - Logarithmic Scale', 'value': 'True'}
                 ],
-                value=[]
+                value=[],
             )
         ], style={'margin-right': '20px'}),  # Adiciona margem à direita para este div
 
@@ -134,7 +133,7 @@ simple_layout = html.Div([
                 options=[
                     {'label': 'Y-axis - Logarithmic Scale', 'value': 'True'}
                 ],
-                value=[]
+                value=[],
             )
         ]),  # Não adiciona margem ao último elemento
     ], style={'display': 'flex', 'width': '100%', 'justifyContent': 'center', 'alignItems': 'center',
@@ -250,9 +249,6 @@ def CurveFit(equation_input, fit_model, only_positive_values, log_x_values, log_
         equation_input = 'y=1-exp(-(x/D)**n)'
     elif fit_model == 'Nagata':
         equation_input = 'y=(a/x) + b*((10**3 + 0.6*f*(x**c)) / (10**3 + 1.6*f*(x**c)))**p'
-    elif fit_model == 'Arrhenius':
-        equation_input = 'y=a*exp(-b/(8.31*x))'
-
 
     r2_str, equacao_ajustada_str = EasyCurveFit(Dataset, Input_Columns, Output_Columns, equation_input, only_positive_values, log_x_values, log_y_values)
 

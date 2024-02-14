@@ -39,17 +39,19 @@ def ajusta_curvas(x, y, equacao, only_positive_values):
         return funcao_lambda(x, *params)
 
     # Ajuste de curvas
-    parametros_iniciais = np.ones(len(parametros))  # Valores iniciais
+    parametros_iniciais = np.ones(len(parametros))*10.0  # Valores iniciais
     limite_inferior = [0] * len(parametros)  # Todos os parâmetros >= 0
     limite_superior = [np.inf] * len(parametros)  # Sem limite superior
 
 
-    if only_positive_values== 'True':
-        print(only_positive_values)
-        params_opt, params_cov = curve_fit(funcao_ajuste, x, y, p0=parametros_iniciais)
-    else:
+    if only_positive_values == ['True']:
+        print('Parametros Positivos')
         print(only_positive_values)
         params_opt, params_cov = curve_fit(funcao_ajuste, x, y, p0=parametros_iniciais, bounds=(limite_inferior, limite_superior))
+    else:
+        print('Parametros Livres')
+        print(only_positive_values)
+        params_opt, params_cov = curve_fit(funcao_ajuste, x, y, p0=parametros_iniciais)
 
     return params_opt, funcao_lambda, parametros
 
@@ -113,7 +115,6 @@ def EasyCurveFit(Dataset, Input_Columns, Output_Columns, equation_input, only_po
     y = y.squeeze()
 
     equacao = solicita_equacao(equation_input)  # O usuário entra com a equação, como 'y = a*x + b'
-
     #print(equation_input, only_positive_values, log_x_values, log_y_values)
     params_opt, funcao_lambda, parametros = ajusta_curvas(x, y, equacao, only_positive_values)
 
