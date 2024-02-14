@@ -39,7 +39,7 @@ def ajusta_curvas(x, y, equacao, only_positive_values):
         return funcao_lambda(x, *params)
 
     # Ajuste de curvas
-    parametros_iniciais = np.ones(len(parametros))*10.0  # Valores iniciais
+    parametros_iniciais = np.ones(len(parametros))  # Valores iniciais
     limite_inferior = [0] * len(parametros)  # Todos os parâmetros >= 0
     limite_superior = [np.inf] * len(parametros)  # Sem limite superior
 
