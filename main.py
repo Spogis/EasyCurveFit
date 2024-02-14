@@ -14,6 +14,7 @@ from EasyCurveFit.CurveFit import *
 Input_Columns = None
 Output_Columns = None
 Dataset = None
+global_parametros_iniciais = None
 
 # Inicializa o app Dash
 app = dash.Dash(__name__,
@@ -101,6 +102,7 @@ simple_layout = html.Div([
             {'label': 'Generalized Logistic Function - Richards Curve', 'value': 'Generalized Logistic Function - Richards Curve'},
             {'label': 'Granulometric Distribution', 'value': 'Granulometric Distribution'},
             {'label': 'Nagata', 'value': 'Nagata'},
+            {'label': 'Peak', 'value': 'Peak'},
            ],
         value='Custom Model',
         multi=False,
@@ -111,7 +113,7 @@ simple_layout = html.Div([
             dcc.Checklist(
                 id='only-positive-values',
                 options=[
-                    {'label': 'Only Positive Parameters', 'value': 'True'}
+                    {'label': 'Only Positive Parameters', 'value': 'True', 'fontSize': '20px'}
                 ],
                 value=['True'],
             )
@@ -121,7 +123,7 @@ simple_layout = html.Div([
             dcc.Checklist(
                 id='log-x-values',
                 options=[
-                    {'label': 'X-axis - Logarithmic Scale', 'value': 'True'}
+                    {'label': 'X-axis - Logarithmic Scale', 'value': 'True', 'fontSize': '20px'}
                 ],
                 value=[],
             )
@@ -131,7 +133,7 @@ simple_layout = html.Div([
             dcc.Checklist(
                 id='log-y-values',
                 options=[
-                    {'label': 'Y-axis - Logarithmic Scale', 'value': 'True'}
+                    {'label': 'Y-axis - Logarithmic Scale', 'value': 'True', 'fontSize': '20px'}
                 ],
                 value=[],
             )
@@ -139,27 +141,59 @@ simple_layout = html.Div([
     ], style={'display': 'flex', 'width': '100%', 'justifyContent': 'center', 'alignItems': 'center',
               'margin-left': '10px', 'margin-right': '10px', 'padding': '20px'}),
 
-    html.Br(),
-    html.H5("Custom Model (ex. y = a*x + b):"),
-    dcc.Textarea(
-        id='equation_input',
-        style={'width': '100%', 'height': 50, 'resize': 'none', 'color': 'white', 'fontWeight': 'bold'},
-        readOnly=False
-    ),
+    html.Div([
+        html.Div([
+            html.Br(),
+            html.H5("Curve Fit Model:"),
+            dcc.Textarea(
+                id='equation_input',
+                style={'width': '100%', 'height': 50, 'resize': 'none', 'color': 'white', 'fontWeight': 'bold', 'fontSize': '20px'},
+                readOnly=False
+            ),
+        ]),  # Não adiciona margem ao último elemento
 
-    html.Button('RUN CURVE FIT!',
-                        id='run-MLP-button',
-                        disabled=False,
-                        style={'display': 'flex', 'width': '500px', 'justifyContent': 'center',
-                               'color': 'white', 'fontWeight': 'bold', 'background-color': 'green',
-                               'margin-left': 'auto', 'margin-right': 'auto',
-                               'margin-top': '10px', 'margin-bottom': '10px'}),
+        html.Div([
+            html.Br(),
+            html.H5("Initial Parameters Values:"),
+            dcc.Textarea(
+                id='initial_parameter_values',
+                style={'width': '100%', 'height': 50, 'resize': 'none', 'color': 'white', 'fontWeight': 'bold', 'fontSize': '20px'},
+                readOnly=False
+            ),
+        ]),  # Não adiciona margem ao último elemento
+    ]),
+
+    html.Div([
+        html.Div([
+            html.Br(),
+            html.Button('INITIAL PARAMETERS!',
+                                id='initial-parameters-button',
+                                disabled=False,
+                                style={'display': 'flex', 'width': '300px', 'justifyContent': 'center',
+                                       'color': 'white', 'fontWeight': 'bold', 'background-color': 'green',
+                                       'margin-left': 'auto', 'margin-right': 'auto',
+                                       'margin-top': '10px', 'margin-bottom': '10px'}),
+        ], style={'margin-right': '20px'}),  # Adiciona margem à direita para este div
+
+        html.Div([
+            html.Br(),
+            html.Button('RUN CURVE FIT!',
+                                id='run-MLP-button',
+                                disabled=False,
+                                style={'display': 'flex', 'width': '300px', 'justifyContent': 'center',
+                                       'color': 'white', 'fontWeight': 'bold', 'background-color': 'green',
+                                       'margin-left': 'auto', 'margin-right': 'auto',
+                                       'margin-top': '10px', 'margin-bottom': '10px'}),
+        ]),  # Não adiciona margem ao último elemento
+    ], style={'display': 'flex', 'width': '100%', 'justifyContent': 'center', 'alignItems': 'center',
+                  'margin-left': '10px', 'margin-right': '10px', 'padding': '20px'}),
+
     html.Br(),
     dbc.Spinner(html.Div(id="loading-output1"), spinner_style={"width": "3rem", "height": "3rem"}),
     html.H5("Curve Fit Results:"),
     dcc.Textarea(
         id='r2-simple-mlp-textarea',
-        style={'width': '100%', 'height': 100, 'resize': 'none', 'color': 'white', 'fontWeight': 'bold'},
+        style={'width': '100%', 'height': 100, 'resize': 'none', 'color': 'white', 'fontWeight': 'bold', 'fontSize': '20px'},
         readOnly=True
     ),
     html.Br(),
@@ -200,7 +234,71 @@ def parse_contents(contents, filename):
 
     return df
 
+@app.callback(Output('initial_parameter_values', 'value', allow_duplicate=True),
+              Input('initial_parameter_values', 'value'),
+              prevent_initial_call=True)
 
+def EstimateInitialParameters(initial_parameter_values):
+    global global_parametros_iniciais
+
+    print(initial_parameter_values)
+    # Função para extrair os valores numéricos da string
+
+    # Função para extrair os valores numéricos da string
+    # String de entrada com valores no formato "letra=valor", separados por vírgulas
+    entrada = 'a=1.0, b=2.0, c=3.2, k=5.0, q=10.0, v=11.0'
+
+    # Função para extrair os valores numéricos da string
+    def extrair_valores_da_string(entrada):
+        # Dividir a string em uma lista de elementos "letra=valor" usando vírgula como separador
+        elementos = entrada.split(', ')
+        # Extrair e converter os valores numéricos
+        valores = [float(elemento.split('=')[1]) for elemento in elementos]
+        return valores
+
+    # Usando a função para obter os valores numéricos da string
+    global_parametros_iniciais = extrair_valores_da_string(initial_parameter_values)
+    print(global_parametros_iniciais)
+
+    return initial_parameter_values
+
+@app.callback(Output('initial_parameter_values', 'value', allow_duplicate=True),
+              State('equation_input', 'value'),
+              Input('initial-parameters-button', 'n_clicks'),
+              prevent_initial_call=True)
+
+def EstimateInitialParameters(equation_input, n_clicks):
+    parametros = ParametersData(equation_input)
+
+    def format_array(values):
+        formatted_values = [f"{value}=1.0 " for value in values]  # Adiciona "=1.0 " a cada valor
+        return ', '.join(formatted_values)  # Junta todos os valores formatados com vírgula
+
+    resultado = format_array(parametros)
+
+    return resultado
+
+@app.callback(Output('equation_input', 'value', allow_duplicate=True),
+              Input('fit-model', 'value'),
+              prevent_initial_call=True)
+
+def WriteEquation(fit_model):
+    if fit_model == 'Custom Model':
+        return ""
+    elif fit_model == 'Linear Model':
+        return 'y=a*x+b'
+    elif fit_model == 'Exponential Model':
+        return 'y=a*x*exp(b*x)'
+    elif fit_model == 'First Order Model':
+        return 'y=𝐾*(1-exp(-(1/𝜏)*x))'
+    elif fit_model == 'Generalized Logistic Function - Richards Curve':
+        return 'y=a+((k-a)/(c+q*exp(-b*x))**(1/v))'
+    elif fit_model == 'Granulometric Distribution':
+        return 'y=1-exp(-(x/D)**n)'
+    elif fit_model == 'Nagata':
+        return 'y=(a/x) + b*((10**3 + 0.6*f*(x**c)) / (10**3 + 1.6*f*(x**c)))**p'
+    elif fit_model == 'Peak':
+        return 'y=(b/(sqrt(1+a*((k-x)**2))))'
 
 @app.callback(Output('equation_input', 'value'),
               Input('equation_input', 'value'))
@@ -234,6 +332,7 @@ def update_tab_content(selected_tab):
 )
 
 def CurveFit(equation_input, fit_model, only_positive_values, log_x_values, log_y_values, n_clicks):
+    global global_parametros_iniciais
 
     if fit_model == 'Custom Model':
         equation_input = equation_input
@@ -249,8 +348,12 @@ def CurveFit(equation_input, fit_model, only_positive_values, log_x_values, log_
         equation_input = 'y=1-exp(-(x/D)**n)'
     elif fit_model == 'Nagata':
         equation_input = 'y=(a/x) + b*((10**3 + 0.6*f*(x**c)) / (10**3 + 1.6*f*(x**c)))**p'
+    elif fit_model == 'Peak':
+        equation_input = 'y=(b/(sqrt(1+a*((k-x)**2))))'
 
-    r2_str, equacao_ajustada_str = EasyCurveFit(Dataset, Input_Columns, Output_Columns, equation_input, only_positive_values, log_x_values, log_y_values)
+    r2_str, equacao_ajustada_str, mensagem_de_erro = EasyCurveFit(Dataset, Input_Columns, Output_Columns, equation_input,
+                                                                  only_positive_values, log_x_values, log_y_values,
+                                                                  global_parametros_iniciais)
 
     # Caminho do diretório contendo as imagens
     directory_path = 'assets/images'
@@ -273,9 +376,12 @@ def CurveFit(equation_input, fit_model, only_positive_values, log_x_values, log_
 
     loading_status = ""
 
-    texto_Retorno = f"{equacao_ajustada_str} \n\n"
-    valor_formatado = f"{r2_str:.4f}"
-    texto_Retorno += f"r²: {valor_formatado}"
+    if mensagem_de_erro is not None:
+        texto_Retorno = str(mensagem_de_erro)
+    else:
+        texto_Retorno = f"{equacao_ajustada_str} \n\n"
+        valor_formatado = f"{r2_str:.4f}"
+        texto_Retorno += f"r²: {valor_formatado}"
 
     return loading_status, image_components, texto_Retorno
 

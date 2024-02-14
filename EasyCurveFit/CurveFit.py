@@ -25,10 +25,16 @@ def ler_excel(caminho):
 def solicita_equacao(equacao):
     return equacao.split('=')[1].strip()  # Retorna somente o lado direito da equação
 
+def ParametersData(equation_input):
+    equacao = solicita_equacao(equation_input)
+    parametros = sorted(list(set([str(p) for p in sympify(equacao).free_symbols if str(p) != 'x'])))
+    return parametros
+
 # 3. Função para ajuste de curvas
-def ajusta_curvas(x, y, equacao, only_positive_values):
+def ajusta_curvas(x, y, equacao, only_positive_values, global_parametros_iniciais):
     # Extrai os parâmetros da equação
     parametros = sorted(list(set([str(p) for p in sympify(equacao).free_symbols if str(p) != 'x'])))
+    print(parametros)
 
     # Define a função a ser ajustada
     funcao = sympify(equacao)
@@ -39,21 +45,36 @@ def ajusta_curvas(x, y, equacao, only_positive_values):
         return funcao_lambda(x, *params)
 
     # Ajuste de curvas
-    parametros_iniciais = np.ones(len(parametros))  # Valores iniciais
+
+    print("Param:", global_parametros_iniciais)
+    if global_parametros_iniciais is not None:
+        parametros_iniciais = global_parametros_iniciais
+    else:
+        parametros_iniciais = np.ones(len(parametros))  # Valores iniciais
+
+    #parametros_iniciais = [20, 600.0, 35.0]
+
     limite_inferior = [0] * len(parametros)  # Todos os parâmetros >= 0
     limite_superior = [np.inf] * len(parametros)  # Sem limite superior
 
+    try:
+        if only_positive_values == ['True']:
+            print('Parametros Positivos')
+            print(only_positive_values)
+            params_opt, params_cov = curve_fit(funcao_ajuste, x, y, p0=parametros_iniciais, bounds=(limite_inferior, limite_superior))
+        else:
+            print('Parametros Livres')
+            print(only_positive_values)
+            params_opt, params_cov = curve_fit(funcao_ajuste, x, y, p0=parametros_iniciais)
 
-    if only_positive_values == ['True']:
-        print('Parametros Positivos')
-        print(only_positive_values)
-        params_opt, params_cov = curve_fit(funcao_ajuste, x, y, p0=parametros_iniciais, bounds=(limite_inferior, limite_superior))
-    else:
-        print('Parametros Livres')
-        print(only_positive_values)
-        params_opt, params_cov = curve_fit(funcao_ajuste, x, y, p0=parametros_iniciais)
-
-    return params_opt, funcao_lambda, parametros
+        mensagem_de_erro = None
+    except RuntimeError as e:
+        mensagem_de_erro = e
+        params_opt = None
+        funcao_lambda = None
+        parametros = None
+    finally:
+        return params_opt, funcao_lambda, parametros, mensagem_de_erro
 
 # 4. Plotar o resultado, apresentar o R^2 e a equação ajustada
 def plot_resultado(x, y, params_opt, funcao_lambda, parametros, equacao, Output_Columns, log_x_values, log_y_values):
@@ -102,7 +123,10 @@ def plot_resultado(x, y, params_opt, funcao_lambda, parametros, equacao, Output_
 
     return r2, equacao_ajustada
 
-def EasyCurveFit(Dataset, Input_Columns, Output_Columns, equation_input, only_positive_values, log_x_values, log_y_values):
+def EasyCurveFit(Dataset, Input_Columns, Output_Columns, equation_input,
+                 only_positive_values, log_x_values, log_y_values,
+                 global_parametros_iniciais):
+
     Input_Plus_Output = Input_Columns + Output_Columns
     Filtered_Dataset = Dataset[Input_Plus_Output]
 
@@ -116,8 +140,11 @@ def EasyCurveFit(Dataset, Input_Columns, Output_Columns, equation_input, only_po
 
     equacao = solicita_equacao(equation_input)  # O usuário entra com a equação, como 'y = a*x + b'
     #print(equation_input, only_positive_values, log_x_values, log_y_values)
-    params_opt, funcao_lambda, parametros = ajusta_curvas(x, y, equacao, only_positive_values)
+    params_opt, funcao_lambda, parametros, mensagem_de_erro = ajusta_curvas(x, y, equacao, only_positive_values, global_parametros_iniciais)
 
-    r2, equacao_ajustada = plot_resultado(x, y, params_opt, funcao_lambda, parametros, equacao, Output_Columns, log_x_values, log_y_values)
-
-    return r2, equacao_ajustada
+    if mensagem_de_erro is not None:
+        return "", "", mensagem_de_erro
+    else:
+        r2, equacao_ajustada = plot_resultado(x, y, params_opt, funcao_lambda, parametros, equacao,
+                                              Output_Columns, log_x_values, log_y_values)
+        return r2, equacao_ajustada, None
