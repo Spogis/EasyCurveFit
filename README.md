@@ -1,14 +1,45 @@
-# Easy Keras MLP Regression
+# Easy Curve Fit - App para Ajuste de Curvas
 
 ## Introdução
 
-Estou emocionado em compartilhar com vocês um projeto no qual venho trabalhando arduamente: um aplicativo revolucionário que simplifica a criação de Redes Neurais Artificiais Multilayer Perceptron (MLP) de uma forma nunca vista antes!
+O ajuste de curvas é uma ferramenta essencial na engenharia química, permitindo que profissionais e pesquisadores modelagem processos e fenômenos complexos através de equações matemáticas. Este app foi desenvolvido com o objetivo de simplificar a aplicação de diferentes modelos de ajuste de curvas, como Linear, Exponencial, Modelo de Primeira Ordem, Função Logística Generalizada, Distribuição Granulométrica e Equação de Nagata, facilitando análises precisas e otimizadas em diversos contextos da engenharia química.
 
-Este app é projetado para ser super simples de usar, permitindo que tanto iniciantes quanto profissionais criem redes neurais de forma rápida e otimizada. Se você está procurando uma ferramenta que elimina a complexidade do processo de desenvolvimento de redes neurais, sua busca termina aqui!
+## Importância do Ajuste de Curvas na Engenharia Química
 
-Clique na Imagem abaixo para assistir o video explicativo:
-[![Watch the video](https://img.youtube.com/vi/sifh2mL9XgY/0.jpg)](https://youtu.be/sifh2mL9XgY)
+O ajuste de curvas é fundamental na engenharia química para a modelagem de processos, otimização de reações, controle de qualidade, e no desenvolvimento de novos materiais e produtos. A capacidade de prever comportamentos e entender profundamente as relações entre variáveis permite inovações e eficiências operacionais, destacando a importância de ferramentas como este app para profissionais da área.
 
+
+## Exemplos de Modelos de Ajuste de Curvas
+
+### Modelo Linear
+
+Ideal para relações diretas entre variáveis, oferecendo uma solução simples para análises iniciais de tendências.
+
+### Modelo Exponencial
+
+Aplicável em processos de crescimento ou decaimento que seguem uma taxa constante proporcional ao tamanho atual do sistema.
+
+### Modelo de Primeira Ordem
+
+Frequentemente usado em dinâmicas de sistemas onde a taxa de mudança é proporcional ao estado atual.
+
+### Função Logística Generalizada
+
+Utilizado para modelar crescimento populacional, processos de saturação e outros fenômenos que se aproximam de um limite máximo.
+
+### Distribuição Granulométrica
+
+Essencial para caracterizar a distribuição de tamanhos de partículas em misturas, comumente utilizado em análises de solo, sedimentos e materiais pulverizados.
+
+### Equação de Nagata
+
+Aplica-se à dinâmica de fluidos e ao estudo de fluxos, especialmente útil em engenharia química para modelar comportamentos de misturas e reações.
+
+## Customização de Modelos
+
+O diferencial deste app é a capacidade de criar e ajustar seus próprios modelos personalizados. Você não está limitado aos modelos predefinidos; nossa interface intuitiva permite que você defina qualquer tipo de equação para ajustar seus dados específicos, oferecendo flexibilidade sem precedentes em suas análises.
+
+---
 
 ## Instalação
 
@@ -16,7 +47,7 @@ Para instalar as dependências necessárias, você precisa ter o Python instalad
 
 1. **Clone o Repositório**
 
-   Primeiro, clone o repositório do Easy Keras MLP Regression para a sua máquina local.
+   Primeiro, clone o repositório do Easy Curve Fit para a sua máquina local.
 
 
 2. **Instale as Dependências**
@@ -24,7 +55,7 @@ Para instalar as dependências necessárias, você precisa ter o Python instalad
    Dentro do diretório do projeto, existe um arquivo chamado `requirements.txt` que contém todas as bibliotecas necessárias. Para instalá-las, execute o seguinte comando: **pip install -r requirements.txt**
    
 
-3. Isso vai instalar todas as dependências necessárias para rodar o Easy Keras MLP Regression.
+3. Isso vai instalar todas as dependências necessárias para rodar o Easy Curve Fit.
 
 ## Execução
 
@@ -38,22 +69,7 @@ Para executar a aplicação, siga estas etapas:
 
 ## Exemplos de Datasets
 
-* No diretório [Datasets](https://github.com/Spogis/EasyKerasMLP/tree/master/Datasets) você encontrará datasets de exemplos que podem lhe auxiliar.
-
-## Videos auxiliares:
-
-Prevendo Transferência de Calor com o Easy Keras MLP!
-
-[![Watch the video](https://img.youtube.com/vi/sKDs55pLjJ4/0.jpg)](https://youtu.be/sKDs55pLjJ4)
-
-Prevendo Calorias em Alimentos usando Inteligência Artificial!
-
-[![Watch the video](https://img.youtube.com/vi/uTCc-OzbLlc/0.jpg)](https://youtu.be/uTCc-OzbLlc)
-
-
-Usando a MLP em outros projetos! Sim, você pode usar nos seus projetos a MLP gerada aqui!
-
-[![Watch the video](https://img.youtube.com/vi/JTH4Vf5edY0/0.jpg)](https://youtu.be/JTH4Vf5edY0)
+* No diretório [Datasets](https://github.com/Spogis/EasyCurveFit/tree/master/Datasets) você encontrará datasets de exemplos que podem lhe auxiliar.
 
 ## Suporte
 
@@ -63,4 +79,4 @@ Se você encontrar algum problema ou tiver alguma dúvida, não hesite em abrir 
 
 ---
 
-Esperamos que você aproveite o uso do Easy Keras MLP Regression!
+Esperamos que você aproveite o uso do Easy Curve Fit!
