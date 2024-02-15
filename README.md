@@ -1,82 +1,80 @@
-# Easy Curve Fit - App para Ajuste de Curvas
 
-## Introdução
+# Easy Curve Fit - App for Curve Fitting
 
-O ajuste de curvas é uma ferramenta essencial na engenharia química, permitindo que profissionais e pesquisadores modelagem processos e fenômenos complexos através de equações matemáticas. Este app foi desenvolvido com o objetivo de simplificar a aplicação de diferentes modelos de ajuste de curvas, como Linear, Exponencial, Modelo de Primeira Ordem, Função Logística Generalizada, Distribuição Granulométrica e Equação de Nagata, facilitando análises precisas e otimizadas em diversos contextos da engenharia química.
+## Introduction
 
-## Importância do Ajuste de Curvas na Engenharia Química
+Curve fitting is an essential tool in chemical engineering, enabling professionals and researchers to model complex processes and phenomena through mathematical equations. This app was developed to simplify the application of different curve fitting models, such as Linear, Exponential, First Order Model, Generalized Logistic Function, Granulometric Distribution, and Nagata Equation, facilitating precise and optimized analyses in various chemical engineering contexts.
 
-O ajuste de curvas é fundamental na engenharia química para a modelagem de processos, otimização de reações, controle de qualidade, e no desenvolvimento de novos materiais e produtos. A capacidade de prever comportamentos e entender profundamente as relações entre variáveis permite inovações e eficiências operacionais, destacando a importância de ferramentas como este app para profissionais da área.
+## Importance of Curve Fitting in Chemical Engineering
 
+Curve fitting is crucial in chemical engineering for process modeling, reaction optimization, quality control, and the development of new materials and products. The ability to predict behaviors and deeply understand the relationships between variables allows for innovations and operational efficiencies, highlighting the importance of tools like this app for professionals in the field.
 
-## Exemplos de Modelos de Ajuste de Curvas
+## Examples of Curve Fitting Models
 
-### Modelo Linear
+### Linear Model
 
-Ideal para relações diretas entre variáveis, oferecendo uma solução simples para análises iniciais de tendências.
+Ideal for direct relationships between variables, offering a simple solution for initial trend analyses.
 
-### Modelo Exponencial
+### Exponential Model
 
-Aplicável em processos de crescimento ou decaimento que seguem uma taxa constante proporcional ao tamanho atual do sistema.
+Applicable in growth or decay processes that follow a constant rate proportional to the current size of the system.
 
-### Modelo de Primeira Ordem
+### First Order Model
 
-Frequentemente usado em dinâmicas de sistemas onde a taxa de mudança é proporcional ao estado atual.
+Often used in system dynamics where the rate of change is proportional to the current state.
 
-### Função Logística Generalizada
+### Generalized Logistic Function
 
-Utilizado para modelar crescimento populacional, processos de saturação e outros fenômenos que se aproximam de um limite máximo.
+Used to model population growth, saturation processes, and other phenomena that approach a maximum limit.
 
-### Distribuição Granulométrica
+### Granulometric Distribution
 
-Essencial para caracterizar a distribuição de tamanhos de partículas em misturas, comumente utilizado em análises de solo, sedimentos e materiais pulverizados.
+Essential for characterizing the size distribution of particles in mixtures, commonly used in soil, sediment, and powdered materials analyses.
 
-### Equação de Nagata
+### Nagata Equation
 
-Aplica-se à dinâmica de fluidos e ao estudo de fluxos, especialmente útil em engenharia química para modelar comportamentos de misturas e reações.
+Applies to fluid dynamics and the study of flows, especially useful in chemical engineering for modeling behaviors of mixtures and reactions.
 
-## Customização de Modelos
+## Model Customization
 
-O diferencial deste app é a capacidade de criar e ajustar seus próprios modelos personalizados. Você não está limitado aos modelos predefinidos; nossa interface intuitiva permite que você defina qualquer tipo de equação para ajustar seus dados específicos, oferecendo flexibilidade sem precedentes em suas análises.
-
----
-
-## Instalação
-
-Para instalar as dependências necessárias, você precisa ter o Python instalado no seu sistema. Se você ainda não tem o Python, você pode baixá-lo [aqui](https://www.python.org/downloads/). Após a instalação do Python, siga os passos abaixo:
-
-1. **Clone o Repositório**
-
-   Primeiro, clone o repositório do Easy Curve Fit para a sua máquina local.
-
-
-2. **Instale as Dependências**
-
-   Dentro do diretório do projeto, existe um arquivo chamado `requirements.txt` que contém todas as bibliotecas necessárias. Para instalá-las, execute o seguinte comando: **pip install -r requirements.txt**
-   
-
-3. Isso vai instalar todas as dependências necessárias para rodar o Easy Curve Fit.
-
-## Execução
-
-Para executar a aplicação, siga estas etapas:
-
-* Navegue até o diretório do projeto onde o `main.py` está localizado.
-
-* Execute o arquivo `main.py` usando Python: **python main.py**
-
-* Após executar o comando, o Dash vai iniciar o servidor local e você poderá acessar a aplicação através do seu navegador. Normalmente, a URL será algo como `http://127.0.0.1:8050/`.
-
-## Exemplos de Datasets
-
-* No diretório [Datasets](https://github.com/Spogis/EasyCurveFit/tree/master/Datasets) você encontrará datasets de exemplos que podem lhe auxiliar.
-
-## Suporte
-
-Se você encontrar algum problema ou tiver alguma dúvida, não hesite em abrir uma issue no repositório do GitHub ou entrar em contato conosco diretamente.
-
-##  Contato: https://linktr.ee/CascaGrossaSuprema
+The unique feature of this app is the ability to create and adjust your own custom models. You are not limited to predefined models; our intuitive interface allows you to define any type of equation to fit your specific data, offering unprecedented flexibility in your analyses.
 
 ---
 
-Esperamos que você aproveite o uso do Easy Curve Fit!
+## Installation
+
+To install the necessary dependencies, you need to have Python installed on your system. If you don't have Python, you can download it [here](https://www.python.org/downloads/). After installing Python, follow the steps below:
+
+1. **Clone the Repository**
+
+   First, clone the Easy Curve Fit repository to your local machine.
+
+2. **Install Dependencies**
+
+   Inside the project directory, there is a file called `requirements.txt` that contains all the necessary libraries. To install them, execute the following command: **pip install -r requirements.txt**
+
+   This will install all the necessary dependencies to run Easy Curve Fit.
+
+## Execution
+
+To run the application, follow these steps:
+
+* Navigate to the project directory where `main.py` is located.
+
+* Execute the `main.py` file using Python: **python main.py**
+
+* After running the command, Dash will start the local server and you can access the application through your browser. Normally, the URL will be something like `http://127.0.0.1:8050/`.
+
+## Example Datasets
+
+* In the [Datasets](https://github.com/Spogis/EasyCurveFit/tree/master/Datasets) directory, you will find example datasets that can assist you.
+
+## Support
+
+If you encounter any problems or have any questions, do not hesitate to open an issue in the GitHub repository or contact us directly.
+
+## Contact: https://linktr.ee/CascaGrossaSuprema
+
+---
+
+We hope you enjoy using Easy Curve Fit!

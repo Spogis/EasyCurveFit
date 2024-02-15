@@ -48,8 +48,8 @@ dataset_layout = html.Div([
     dcc.Upload(
         id='upload-data',
         children=html.Div([
-            'Arraste e Solte ou ',
-            html.A('Selecione um Arquivo Excel ou CSV (Seu Dataset)')
+            'Drag and Drop or ',
+            html.A('Select an Excel or CSV File (Your Dataset)')
         ]),
         style={
             'width': '100%',
@@ -60,32 +60,31 @@ dataset_layout = html.Div([
             'borderRadius': '5px',
             'textAlign': 'center',
         },
-        # Permite múltiplos arquivos a serem carregados
         multiple=False
     ),
     html.Br(),
-    html.Label('Selecione qual será a coluna dos dados independentes (X):'),
+    html.Label('Select which will be the column of independent data (X):'),
     dcc.Dropdown(
         id='column-input-selector',
         multi=True,
-        placeholder='Selecione as colunas após carregar um arquivo'
+        placeholder='Select the columns after loading a file'
     ),
     html.Br(),
     dash_table.DataTable(
         id='input-table',
-        page_size=3,  # Número de linhas a mostrar por página
+        page_size=3,
     ),
     html.Br(),
-    html.Label('Selecione qual será a coluna dos dados independentes (Y):'),
+    html.Label('Select which will be the column of dependent data (Y):'),
     dcc.Dropdown(
         id='column-output-selector',
         multi=True,
-        placeholder='Selecione as colunas após carregar um arquivo'
+        placeholder='Select the columns after loading a file'
     ),
     html.Br(),
     dash_table.DataTable(
         id='output-table',
-        page_size=3,  # Número de linhas a mostrar por página
+        page_size=3,
     ),
 ], style={'width': '80%', 'justifyContent': 'center', 'margin-left': 'auto', 'margin-right': 'auto', 'padding': '20px'})
 
@@ -143,7 +142,6 @@ simple_layout = html.Div([
 
     html.Div([
         html.Div([
-            html.Br(),
             html.H5("Curve Fit Model:"),
             dcc.Textarea(
                 id='equation_input',
@@ -153,19 +151,17 @@ simple_layout = html.Div([
         ]),  # Não adiciona margem ao último elemento
 
         html.Div([
-            html.Br(),
             html.H5("Initial Parameters Values:"),
             dcc.Textarea(
                 id='initial_parameter_values',
                 style={'width': '100%', 'height': 50, 'resize': 'none', 'color': 'white', 'fontWeight': 'bold', 'fontSize': '20px'},
                 readOnly=False
             ),
-        ]),  # Não adiciona margem ao último elemento
+        ], id='div-initial_parameter-oculto', style={'display': 'none'}),
     ]),
 
     html.Div([
         html.Div([
-            html.Br(),
             html.Button('INITIAL PARAMETERS!',
                                 id='initial-parameters-button',
                                 disabled=False,
@@ -176,7 +172,6 @@ simple_layout = html.Div([
         ], style={'margin-right': '20px'}),  # Adiciona margem à direita para este div
 
         html.Div([
-            html.Br(),
             html.Button('RUN CURVE FIT!',
                                 id='run-MLP-button',
                                 disabled=False,
@@ -188,7 +183,6 @@ simple_layout = html.Div([
     ], style={'display': 'flex', 'width': '100%', 'justifyContent': 'center', 'alignItems': 'center',
                   'margin-left': '10px', 'margin-right': '10px', 'padding': '20px'}),
 
-    html.Br(),
     dbc.Spinner(html.Div(id="loading-output1"), spinner_style={"width": "3rem", "height": "3rem"}),
     html.H5("Curve Fit Results:"),
     dcc.Textarea(
@@ -197,7 +191,20 @@ simple_layout = html.Div([
         readOnly=True
     ),
     html.Br(),
-    html.Div(id='button-output'),
+    html.Div([
+        dash_table.DataTable(id='table-adjust',
+                             columns=[{"name": "Parameter", "id": "Parameter"},
+                                      {"name": "Adjusted Value", "id": "Adjusted Value"},
+                                      {"name": "Standard Deviation", "id": "Standard Deviation"}],
+                             data=[],
+                             style_cell={'textAlign': 'left', 'fontSize': '20px', 'fontFamily': 'Arial'},
+        )
+    ]),
+    html.Br(),
+    html.Div([
+        html.Div(id='button-output'),
+    ], style={'width': '100%', 'textAlign': 'center', 'justifyContent': 'center', 'margin-left': 'auto', 'margin-right': 'auto'}),
+
 ], style={'width': '80%', 'justifyContent': 'center', 'margin-left': 'auto', 'margin-right': 'auto', 'padding': '20px'})
 
 # Carregar o conteúdo do arquivo README.md
@@ -222,45 +229,32 @@ def parse_contents(contents, filename):
             df = pd.read_csv(io.BytesIO(decoded))
         else:
             return html.Div([
-                'Tipo de arquivo não suportado.'
+                'Unsupported file type.'
             ])
     except Exception as e:
-        print(e)
         return html.Div([
-            'Houve um erro ao processar o arquivo.'
+            'There was an error processing the file.'
         ])
 
     Dataset = df
 
     return df
 
-@app.callback(Output('initial_parameter_values', 'value', allow_duplicate=True),
+@app.callback([Output('initial_parameter_values', 'value', allow_duplicate=True),
+               Output('div-initial_parameter-oculto', 'style')],
               Input('initial_parameter_values', 'value'),
               prevent_initial_call=True)
 
 def EstimateInitialParameters(initial_parameter_values):
     global global_parametros_iniciais
-
-    print(initial_parameter_values)
-    # Função para extrair os valores numéricos da string
-
-    # Função para extrair os valores numéricos da string
-    # String de entrada com valores no formato "letra=valor", separados por vírgulas
-    entrada = 'a=1.0, b=2.0, c=3.2, k=5.0, q=10.0, v=11.0'
-
-    # Função para extrair os valores numéricos da string
     def extrair_valores_da_string(entrada):
-        # Dividir a string em uma lista de elementos "letra=valor" usando vírgula como separador
         elementos = entrada.split(', ')
-        # Extrair e converter os valores numéricos
         valores = [float(elemento.split('=')[1]) for elemento in elementos]
         return valores
 
     # Usando a função para obter os valores numéricos da string
     global_parametros_iniciais = extrair_valores_da_string(initial_parameter_values)
-    print(global_parametros_iniciais)
-
-    return initial_parameter_values
+    return initial_parameter_values, {'display': 'block'}
 
 @app.callback(Output('initial_parameter_values', 'value', allow_duplicate=True),
               State('equation_input', 'value'),
@@ -271,8 +265,8 @@ def EstimateInitialParameters(equation_input, n_clicks):
     parametros = ParametersData(equation_input)
 
     def format_array(values):
-        formatted_values = [f"{value}=1.0 " for value in values]  # Adiciona "=1.0 " a cada valor
-        return ', '.join(formatted_values)  # Junta todos os valores formatados com vírgula
+        formatted_values = [f"{value}=1.0 " for value in values]
+        return ', '.join(formatted_values)
 
     resultado = format_array(parametros)
 
@@ -306,7 +300,6 @@ def WriteEquation(fit_model):
 def update_equation(equation):
     return equation
 
-# Callback para atualizar o conteúdo da aba com base na seleção
 @app.callback(Output('tabs-content', 'children'),
               [Input('tabs', 'value')])
 
@@ -321,7 +314,8 @@ def update_tab_content(selected_tab):
 @app.callback(
     [Output("loading-output1", "children", allow_duplicate=True),
      Output("button-output", "children", allow_duplicate=True),
-     Output('r2-simple-mlp-textarea', 'value')],
+     Output('r2-simple-mlp-textarea', 'value'),
+     Output('table-adjust', 'data')],
     State('equation_input', 'value'),
     State('fit-model', 'value'),
     State('only-positive-values', 'value'),
@@ -351,27 +345,18 @@ def CurveFit(equation_input, fit_model, only_positive_values, log_x_values, log_
     elif fit_model == 'Peak':
         equation_input = 'y=(b/(sqrt(1+a*((k-x)**2))))'
 
-    r2_str, equacao_ajustada_str, mensagem_de_erro = EasyCurveFit(Dataset, Input_Columns, Output_Columns, equation_input,
-                                                                  only_positive_values, log_x_values, log_y_values,
-                                                                  global_parametros_iniciais)
+    r2_str, equacao_ajustada_str, mensagem_de_erro, parametros, params_opt, desvios = EasyCurveFit(Dataset, Input_Columns, Output_Columns, equation_input,
+                                                                                                   only_positive_values, log_x_values, log_y_values,
+                                                                                                   global_parametros_iniciais)
 
-    # Caminho do diretório contendo as imagens
     directory_path = 'assets/images'
-
-    # Lista para armazenar os componentes de imagem
     image_components = []
-
-    # Lista de extensões de arquivo para considerar como imagens
     image_extensions = ['.jpg', '.jpeg', '.png', '.gif']
 
-    # Itera sobre todos os arquivos no diretório
     for filename in os.listdir(directory_path):
-        # Verifica se o arquivo é uma imagem
         if any(filename.lower().endswith(ext) for ext in image_extensions):
-            # Cria o caminho completo do arquivo
             file_path = os.path.join(directory_path, filename)
             unique_path = f"{file_path}?t={int(time.time())}"
-            # Cria um componente de imagem e adiciona à lista
             image_components.append(html.Img(src=unique_path, style={'width': '50%', 'height': 'auto'}))
 
     loading_status = ""
@@ -383,7 +368,13 @@ def CurveFit(equation_input, fit_model, only_positive_values, log_x_values, log_
         valor_formatado = f"{r2_str:.4f}"
         texto_Retorno += f"r²: {valor_formatado}"
 
-    return loading_status, image_components, texto_Retorno
+        df_adjust = pd.DataFrame({
+            "Parameter": parametros,
+            "Adjusted Value": params_opt,
+            "Standard Deviation": desvios
+        })
+
+    return loading_status, image_components, texto_Retorno, df_adjust.to_dict('records')
 
 @app.callback(
     Output('column-input-selector', 'options'),
