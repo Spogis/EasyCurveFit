@@ -11,6 +11,9 @@ Curve fitting is crucial in chemical engineering for process modeling, reaction 
 
 ## Examples of Curve Fitting Models
 
+[![Watch the video](https://img.youtube.com/vi/qxRbjU4bems/0.jpg)](https://youtu.be/qxRbjU4bems)
+
+
 ### Linear Model
 
 Ideal for direct relationships between variables, offering a simple solution for initial trend analyses.

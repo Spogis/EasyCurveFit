@@ -11,6 +11,8 @@ O ajuste de curvas é fundamental na engenharia química para a modelagem de pro
 
 ## Exemplos de Modelos de Ajuste de Curvas
 
+[![Watch the video](https://img.youtube.com/vi/qxRbjU4bems/0.jpg)](https://youtu.be/qxRbjU4bems)
+
 ### Modelo Linear
 
 Ideal para relações diretas entre variáveis, oferecendo uma solução simples para análises iniciais de tendências.
