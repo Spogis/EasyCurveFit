@@ -305,17 +305,13 @@ def download(n_clicks):
 
 def atualizar_grafico(valor_slider):
     if valor_slider == 1:
-        print('Coarse')
         epsilon = 0.1
     if valor_slider == 2:
-        print('Balanced')
         epsilon = 0.01
     if valor_slider == 3:
-        print('Fine')
         epsilon = 0.005
 
     RDP_Return_String, df_original, df_simplified = RDP(Dataset, Input_Columns, Output_Columns, epsilon)
-    print(RDP_Return_String)
 
     # Criação do gráfico com os dois datasets
     fig = go.Figure()
