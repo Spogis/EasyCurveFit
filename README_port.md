@@ -43,6 +43,17 @@ O diferencial deste app é a capacidade de criar e ajustar seus próprios modelo
 
 ---
 
+## Data Prep - Ramer-Douglas-Peucker
+
+O algoritmo Ramer-Douglas-Peucker é um método usado em gráficos de computador e SIG (Sistema de Informações Geográficas) para simplificar curvas ou polilinhas reduzindo pontos. Foi desenvolvido independentemente por Urs Ramer em 1972 e por David Douglas e Thomas Peucker em 1973. O algoritmo funciona aproximando uma curva com menos pontos, mantendo as características essenciais da forma dentro de uma tolerância especificada.
+
+O processo começa conectando os primeiros e últimos pontos da curva com uma linha, identificando o ponto mais distante desta linha e mantendo-o se sua distância exceder a tolerância. Este ponto divide a curva em dois segmentos, e o algoritmo simplifica recursivamente cada segmento. Esta abordagem iterativa reduz significativamente a complexidade dos dados em aplicações de SIG, melhorando a eficiência de armazenamento, processamento e exibição sem comprometer a integridade visual das características geográficas.
+
+O algoritmo Ramer-Douglas-Peucker exemplifica como a redução de dados pode ser alcançada sem perder detalhes geométricos significativos, tornando-se inestimável em mapeamento digital e várias aplicações que requerem a renderização eficiente de formas complexas.
+[![Watch the video](https://img.youtube.com/vi/u1ZMzY5kwiA/0.jpg)](https://youtu.be/u1ZMzY5kwiA)
+
+---
+
 ## Instalação
 
 Para instalar as dependências necessárias, você precisa ter o Python instalado no seu sistema. Se você ainda não tem o Python, você pode baixá-lo [aqui](https://www.python.org/downloads/). Após a instalação do Python, siga os passos abaixo:

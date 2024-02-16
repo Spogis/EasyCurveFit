@@ -44,6 +44,18 @@ The unique feature of this app is the ability to create and adjust your own cust
 
 ---
 
+## Data Prep - Ramer-Douglas-Peucker
+
+The Ramer-Douglas-Peucker algorithm is a method used in computer graphics and GIS to simplify curves or polylines by reducing points. It was independently developed by Urs Ramer in 1972 and by David Douglas and Thomas Peucker in 1973. The algorithm works by approximating a curve with fewer points, maintaining the shape's essential features within a specified tolerance.
+
+The process starts by connecting the first and last points of the curve with a line, identifying the farthest point from this line, and keeping it if its distance exceeds the tolerance. This point divides the curve into two segments, and the algorithm recursively simplifies each segment. This iterative approach significantly reduces data complexity in GIS applications, enhancing storage, processing, and display efficiencies without compromising the geographical features' visual integrity.
+
+The Ramer-Douglas-Peucker algorithm exemplifies how data reduction can be achieved without losing significant geometric detail, making it invaluable in digital mapping and various applications requiring efficient rendering of complex shapes.
+
+[![Watch the video](https://img.youtube.com/vi/u1ZMzY5kwiA/0.jpg)](https://youtu.be/u1ZMzY5kwiA)
+
+---
+
 ## Installation
 
 To install the necessary dependencies, you need to have Python installed on your system. If you don't have Python, you can download it [here](https://www.python.org/downloads/). After installing Python, follow the steps below:
