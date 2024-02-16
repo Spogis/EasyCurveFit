@@ -5,11 +5,14 @@ import time
 
 import dash
 from dash.dependencies import Input, Output, State
+import utils.dash_reusable_components as drc
 import dash_bootstrap_components as dbc
 from dash import dcc, html
 from dash import dash_table
+import plotly.graph_objs as go
 
 from EasyCurveFit.CurveFit import *
+from EasyCurveFit.CurvePrep import *
 
 Input_Columns = None
 Output_Columns = None
@@ -36,7 +39,8 @@ app.layout = html.Div([
         dcc.Tabs(id='tabs', value='tab1', children=[
             dcc.Tab(label='Data', value='tab1'),
             dcc.Tab(label='Curve Fit', value='tab2'),
-            dcc.Tab(label='About', value='tab3'),
+            dcc.Tab(label='Curve Prep', value='tab3'),
+            dcc.Tab(label='About', value='tab4'),
         ], style={'align': 'center', 'width': '80%', 'margin-left': 'auto', 'margin-right': 'auto'}),
     ]),
     dcc.Store(id='store', storage_type='memory'),
@@ -215,6 +219,47 @@ about_layout = html.Div([
     dcc.Markdown(children=readme_content)
 ], style={'width': '80%', 'justifyContent': 'center', 'margin-left': 'auto', 'margin-right': 'auto', 'padding': '20px'})
 
+# Curve Prep Layout
+curve_prep_layout = html.Div([
+    html.Div([
+        html.Div([
+            drc.NamedSlider(
+                name="Ramer Douglas Peucker Epsilon",
+                id="ramer_douglas_peucker_epsilon",
+                min=1,
+                max=3,
+                step=1,
+                marks={
+                    1: 'Coarse',
+                    2: 'Balanced',
+                    3: 'Fine'
+                },
+                included=False,
+                value=2
+            ),
+        ], style={'width': '30%', 'display': 'inline-block', 'margin': '20px', 'textAlign': 'center'}),
+
+        html.Div([
+            html.Button('Download', id='botao-download', n_clicks=0,
+                        style={'margin': '20px', 'color': 'white', 'fontWeight': 'bold', 'display': 'inline-block'}),
+        ], style={'width': '30%', 'display': 'inline-block', 'textAlign': 'center'}),
+
+    ], style={'width': '100%', 'display': 'flex', 'justifyContent': 'center', 'alignItems': 'center'}),
+
+    dcc.Graph(id='meu-grafico'),
+
+    html.H5("Filtered Curve Results:"),
+    dcc.Textarea(
+        id='filtered-curve-textarea',
+        style={'width': '100%', 'height': 200, 'resize': 'none', 'color': 'white', 'fontWeight': 'bold'},
+        readOnly=True
+    ),
+
+    dcc.Download(id="download-curve"),
+
+], style={'width': '80%', 'justifyContent': 'center', 'margin-left': 'auto', 'margin-right': 'auto', 'padding': '20px'})
+
+
 
 def parse_contents(contents, filename):
     global Dataset
@@ -239,6 +284,59 @@ def parse_contents(contents, filename):
     Dataset = df
 
     return df
+
+@app.callback(
+    Output("download-curve", "data"),
+    Input("botao-download", "n_clicks"),
+    prevent_initial_call=True
+)
+
+def download(n_clicks):
+    file_path = 'assets/Filtered_RDP.xlsx'
+    return dcc.send_file(file_path)
+
+
+# Callback para atualizar o gráfico
+@app.callback(
+    [Output('meu-grafico', 'figure'),
+     Output('filtered-curve-textarea', 'value')],
+    Input('ramer_douglas_peucker_epsilon', 'value')
+)
+
+def atualizar_grafico(valor_slider):
+    if valor_slider == 1:
+        print('Coarse')
+        epsilon = 0.1
+    if valor_slider == 2:
+        print('Balanced')
+        epsilon = 0.01
+    if valor_slider == 3:
+        print('Fine')
+        epsilon = 0.005
+
+    RDP_Return_String, df_original, df_simplified = RDP(Dataset, Input_Columns, Output_Columns, epsilon)
+    print(RDP_Return_String)
+
+    # Criação do gráfico com os dois datasets
+    fig = go.Figure()
+
+    # Dados originais
+    fig.add_trace(go.Scatter(x=df_original['X'], y=df_original['Y'], mode='lines', name='Experimental Data'))
+
+    # Dados filtrados
+    fig.add_trace(go.Scatter(x=df_simplified['X'], y=df_simplified['Y'], mode='markers', name='Filtered Data'))
+
+    # Atualiza layout do gráfico
+    fig.update_layout(xaxis_title='X',
+                      yaxis_title='Y',
+                      legend=dict(orientation="h",
+                                  x=0.5,
+                                  y=1.1,
+                                  xanchor="center",
+                                  yanchor="bottom")
+                      )
+
+    return fig, RDP_Return_String
 
 @app.callback([Output('initial_parameter_values', 'value', allow_duplicate=True),
                Output('div-initial_parameter-oculto', 'style')],
@@ -309,6 +407,8 @@ def update_tab_content(selected_tab):
     elif selected_tab == 'tab2':
         return simple_layout
     elif selected_tab == 'tab3':
+        return curve_prep_layout
+    elif selected_tab == 'tab4':
         return about_layout
 
 @app.callback(

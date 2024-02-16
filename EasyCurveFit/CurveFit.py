@@ -98,7 +98,7 @@ def plot_resultado(x, y, params_opt, funcao_lambda, parametros, equacao, Output_
     r2 = r2_score(y, y_pred)
     equacao_ajustada = 'y = ' + equacao
     for param, valor in zip(parametros, params_opt):
-        equacao_ajustada = equacao_ajustada.replace(param, f'{valor:.4f}')
+        equacao_ajustada = equacao_ajustada.replace(param, f'{valor:.4e}')
 
     return r2, equacao_ajustada
 
