@@ -227,12 +227,13 @@ curve_prep_layout = html.Div([
                 name="Ramer Douglas Peucker Epsilon",
                 id="ramer_douglas_peucker_epsilon",
                 min=1,
-                max=3,
+                max=4,
                 step=1,
                 marks={
                     1: 'Coarse',
                     2: 'Balanced',
-                    3: 'Fine'
+                    3: 'Fine',
+                    4: 'Extra Fine',
                 },
                 included=False,
                 value=2
@@ -310,14 +311,19 @@ def atualizar_grafico(valor_slider):
         epsilon = 0.01
     if valor_slider == 3:
         epsilon = 0.005
+    if valor_slider == 4:
+        epsilon = 0.001
 
-    RDP_Return_String, df_original, df_simplified = RDP(Dataset, Input_Columns, Output_Columns, epsilon)
+    RDP_Return_String, df_original, df_simplified, df_gaussian = RDP(Dataset, Input_Columns, Output_Columns, epsilon)
 
     # Criação do gráfico com os dois datasets
     fig = go.Figure()
 
     # Dados originais
     fig.add_trace(go.Scatter(x=df_original['X'], y=df_original['Y'], mode='lines', name='Experimental Data'))
+
+    # Dados filtro Gaussiano
+    # fig.add_trace(go.Scatter(x=df_gaussian['X'], y=df_gaussian['Y'], mode='lines', name='Gaussian Filter'))
 
     # Dados filtrados
     fig.add_trace(go.Scatter(x=df_simplified['X'], y=df_simplified['Y'], mode='markers', name='Filtered Data'))

@@ -8,7 +8,9 @@ from scipy.ndimage import gaussian_filter1d
 from EasyCurveFit.CleanData import *
 
 def gaussian_filter(data, sigma):
-    return gaussian_filter1d(data, sigma)
+    y_filtered = gaussian_filter1d(data['y'].values, sigma)
+    df = pd.DataFrame({'X': data['x'].values, 'Y': y_filtered})
+    return df
 
 def ramer_douglas_peucker(points, epsilon):
     def find_farthest_point(segment_start, segment_end, points):
@@ -55,15 +57,29 @@ def RDP(Dataset, Input_Columns, Output_Columns, epsilon):
     df = Filtered_Dataset
     df = CleanDataset(df)
 
-    x = df[Input_Columns].values
-    x = x.squeeze()
-    y = df[Output_Columns].values
-    y = y.squeeze()
+    original_x = df[Input_Columns].values
+    original_x = original_x.squeeze()
+    original_y = df[Output_Columns].values
+    original_y = original_y.squeeze()
+    original_points = np.vstack((original_x, original_y)).T
+    df_original = pd.DataFrame(original_points, columns=['X', 'Y'])
 
-    #x = df[Input_Columns].to_numpy()
-    #y = df[Output_Columns].to_numpy()
+    GaussFilter = 'False'
 
-    points = np.vstack((x, y)).T
+    if GaussFilter == 'True':
+        df_gaussian = gaussian_filter(df, 10)
+        x = df_gaussian['X'].values
+        x = x.squeeze()
+        y = df_gaussian['Y'].values
+        y = y.squeeze()
+        points = np.vstack((x, y)).T
+    else:
+        x = df[Input_Columns].values
+        x = x.squeeze()
+        y = df[Output_Columns].values
+        y = y.squeeze()
+        points = np.vstack((x, y)).T
+        df_gaussian = None
 
     simplified_points = ramer_douglas_peucker(points, epsilon)
 
@@ -89,7 +105,6 @@ def RDP(Dataset, Input_Columns, Output_Columns, epsilon):
 
     # Convertendo para DataFrame
     df_simplified = pd.DataFrame(simplified_points, columns=['X', 'Y'])
-    df_original = pd.DataFrame(points, columns=['X', 'Y'])
 
     # Salvando no arquivo Excel
     output_filename = 'assets/Filtered_RDP.xlsx'
@@ -103,5 +118,5 @@ def RDP(Dataset, Input_Columns, Output_Columns, epsilon):
     RDP_Return_String +=f"Hausdorff Distance between original and simplified data: {hausdorff_distance:.2e}\n"
     RDP_Return_String +=f"Average Curvature Difference: {np.mean(curvature_difference):.2e}\n"
 
-    return RDP_Return_String, df_original, df_simplified
+    return RDP_Return_String, df_original, df_simplified, df_gaussian
 
