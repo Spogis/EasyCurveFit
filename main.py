@@ -2,6 +2,7 @@
 import base64
 import io
 import time
+from io import BytesIO
 
 import dash
 from dash.dependencies import Input, Output, State
@@ -13,11 +14,16 @@ import plotly.graph_objs as go
 
 from EasyCurveFit.CurveFit import *
 from EasyCurveFit.CurvePrep import *
+from EasyCurveFit.Brent import *
+from EasyCurveFit.ClickPoints import *
 
 Input_Columns = None
 Output_Columns = None
 Dataset = None
 global_parametros_iniciais = None
+
+# Lista para armazenar os pontos clicados
+clicked_points = []
 
 # Inicializa o app Dash
 app = dash.Dash(__name__,
@@ -40,7 +46,8 @@ app.layout = html.Div([
             dcc.Tab(label='Data', value='tab1'),
             dcc.Tab(label='Curve Fit', value='tab2'),
             dcc.Tab(label='Curve Prep', value='tab3'),
-            dcc.Tab(label='About', value='tab4'),
+            dcc.Tab(label='Extract Points', value='tab4'),
+            dcc.Tab(label='About', value='tab5'),
         ], style={'align': 'center', 'width': '80%', 'margin-left': 'auto', 'margin-right': 'auto'}),
     ]),
     dcc.Store(id='store', storage_type='memory'),
@@ -224,16 +231,15 @@ curve_prep_layout = html.Div([
     html.Div([
         html.Div([
             drc.NamedSlider(
-                name="Ramer Douglas Peucker Epsilon",
+                name="Number of Points",
                 id="ramer_douglas_peucker_epsilon",
                 min=1,
-                max=4,
+                max=3,
                 step=1,
                 marks={
                     1: 'Coarse',
                     2: 'Balanced',
                     3: 'Fine',
-                    4: 'Extra Fine',
                 },
                 included=False,
                 value=2
@@ -306,15 +312,17 @@ def download(n_clicks):
 
 def atualizar_grafico(valor_slider):
     if valor_slider == 1:
-        epsilon = 0.1
-    if valor_slider == 2:
         epsilon = 0.01
-    if valor_slider == 3:
+        n_pontos = 10
+    if valor_slider == 2:
         epsilon = 0.005
-    if valor_slider == 4:
+        n_pontos = 30
+    if valor_slider == 3:
         epsilon = 0.001
+        n_pontos = 50
 
     RDP_Return_String, df_original, df_simplified, df_gaussian = RDP(Dataset, Input_Columns, Output_Columns, epsilon)
+    #df_novo, df_original = SplitCurve(Dataset, Input_Columns, Output_Columns, n_pontos)
 
     # Criação do gráfico com os dois datasets
     fig = go.Figure()
@@ -324,6 +332,9 @@ def atualizar_grafico(valor_slider):
 
     # Dados filtro Gaussiano
     # fig.add_trace(go.Scatter(x=df_gaussian['X'], y=df_gaussian['Y'], mode='lines', name='Gaussian Filter'))
+
+    # Dados Brent
+    #fig.add_trace(go.Scatter(x=df_novo['X'], y=df_novo['Y'], mode='markers', name='Brent Points'))
 
     # Dados filtrados
     fig.add_trace(go.Scatter(x=df_simplified['X'], y=df_simplified['Y'], mode='markers', name='Filtered Data'))
@@ -337,7 +348,6 @@ def atualizar_grafico(valor_slider):
                                   xanchor="center",
                                   yanchor="bottom")
                       )
-
     return fig, RDP_Return_String
 
 @app.callback([Output('initial_parameter_values', 'value', allow_duplicate=True),
@@ -411,6 +421,8 @@ def update_tab_content(selected_tab):
     elif selected_tab == 'tab3':
         return curve_prep_layout
     elif selected_tab == 'tab4':
+        return CreateClickLayout(Dataset, Input_Columns, Output_Columns)
+    elif selected_tab == 'tab5':
         return about_layout
 
 @app.callback(
@@ -537,6 +549,67 @@ def update_table(selected_columns, list_of_contents, list_of_names):
         Output_Columns = selected_columns
         return columns, data
     return [], []
+
+
+
+########################################################################################################################
+# Callback para alternar o modo de operação e atualizar o estilo do botão
+@app.callback(
+    [Output('btn-toggle', 'children'), Output('btn-toggle', 'style')],
+    Input('btn-toggle', 'n_clicks')
+)
+def toggle_mode(n_clicks):
+    mode = 'del' if n_clicks % 2 else 'add'
+    btn_text = "Mode: Delete" if mode == 'del' else "Mode: Add"
+    btn_style = {'backgroundColor': 'red', 'color': 'white', 'fontWeight': 'bold', 'fontSize': '20px', 'marginRight': '10px'} if mode == 'del' else {'backgroundColor': 'green', 'color': 'white', 'fontWeight': 'bold', 'fontSize': '20px', 'marginRight': '10px'}
+    return btn_text, btn_style
+
+# Callback para gerar e baixar o Excel
+@app.callback(
+    Output("download-excel", "data"),
+    Input("btn-download", "n_clicks"),
+    prevent_initial_call=True
+)
+def generate_excel(n_clicks):
+    df_points = pd.DataFrame(clicked_points, columns=['x', 'y'])
+    df_points = df_points.sort_values(by='x', ascending=True)
+    output = BytesIO()
+    df_points.to_excel(output, index=False, sheet_name='Filtered Points')
+    output.seek(0)
+    return dcc.send_bytes(output.getvalue(), filename="filtered_points.xlsx")
+
+
+# Callback para adicionar ou remover pontos e atualizar o gráfico
+@app.callback(
+    Output('main-graph', 'figure'),
+    [Input('main-graph', 'clickData'), Input('btn-toggle', 'n_clicks')],
+    [State('main-graph', 'figure')]
+)
+def update_graph(clickData, n_clicks, figure):
+    df_interpolado = CreateInterpolatedDataset(Dataset, Input_Columns, Output_Columns)
+
+    # Verifica o contexto do callback para determinar a entrada que acionou a atualização
+    if not ctx.triggered or ctx.triggered[0]['prop_id'] == 'btn-toggle.n_clicks':
+        raise dash.exceptions.PreventUpdate
+
+    global clicked_points
+    mode = 'del' if n_clicks % 2 else 'add'
+    if clickData:
+        x_val, y_val = clickData['points'][0]['x'], clickData['points'][0]['y']
+        if mode == 'add':
+            clicked_points.append((x_val, y_val))
+        elif mode == 'del':
+            # Encontrar e remover o ponto mais próximo
+            if clicked_points:
+                closest_point = min(clicked_points, key=lambda point: (point[0] - x_val)**2 + (point[1] - y_val)**2)
+                clicked_points.remove(closest_point)
+
+    # Atualiza o gráfico com todos os pontos clicados
+    figure['data'] = [go.Scatter(x=df_interpolado['x'], y=df_interpolado['y'], mode='lines', name='Experimental Data')] + \
+                     [go.Scatter(x=[p[0] for p in clicked_points], y=[p[1] for p in clicked_points], mode='markers', marker=dict(color='red', size=10), name='Filtered Points')]
+    return figure
+
+
 
 # Roda o app
 if __name__ == '__main__':
