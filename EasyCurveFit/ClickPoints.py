@@ -38,10 +38,13 @@ def CreateClickLayout(Dataset, Input_Columns, Output_Columns):
     click_layout = html.Div([
         dcc.Graph(id='main-graph', figure={
             'data': [go.Scatter(x=df_interpolado['x'], y=df_interpolado['y'], mode='lines', name='Experimental Data')],
-            'layout': go.Layout(clickmode='event+select')
+            'layout': go.Layout(
+                clickmode='event+select',
+                legend=dict(orientation="h", x=0.5, y=1.1, xanchor="center", yanchor="bottom")),
         }),
         html.Div([
             html.Button("Mode: Add", id="btn-toggle", n_clicks=0, style={'backgroundColor': 'green', 'color': 'white', 'fontWeight': 'bold', 'fontSize': '20px', 'marginRight': '10px'}),
+            html.Button("Clear Points", id="btn-clear", n_clicks=0,  style={'backgroundColor': 'orange', 'color': 'white', 'fontWeight': 'bold', 'fontSize': '20px', 'marginRight': '10px'}),
             html.Button("Download Excel", id="btn-download", n_clicks=0, style={'backgroundColor': 'blue', 'color': 'white', 'fontWeight': 'bold', 'fontSize': '20px'})
         ], style={'padding': '20px'}),
         dcc.Download(id="download-excel")

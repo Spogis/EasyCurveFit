@@ -582,10 +582,12 @@ def generate_excel(n_clicks):
 # Callback para adicionar ou remover pontos e atualizar o gráfico
 @app.callback(
     Output('main-graph', 'figure'),
-    [Input('main-graph', 'clickData'), Input('btn-toggle', 'n_clicks')],
+    [Input('main-graph', 'clickData'),
+     Input('btn-toggle', 'n_clicks'),
+     Input('btn-clear', 'n_clicks')],
     [State('main-graph', 'figure')]
 )
-def update_graph(clickData, n_clicks, figure):
+def update_graph(clickData, btn_toggle_clicks, btn_clear_clicks, figure):
     df_interpolado = CreateInterpolatedDataset(Dataset, Input_Columns, Output_Columns)
 
     # Verifica o contexto do callback para determinar a entrada que acionou a atualização
@@ -593,23 +595,26 @@ def update_graph(clickData, n_clicks, figure):
         raise dash.exceptions.PreventUpdate
 
     global clicked_points
-    mode = 'del' if n_clicks % 2 else 'add'
-    if clickData:
-        x_val, y_val = clickData['points'][0]['x'], clickData['points'][0]['y']
-        if mode == 'add':
-            clicked_points.append((x_val, y_val))
-        elif mode == 'del':
-            # Encontrar e remover o ponto mais próximo
-            if clicked_points:
-                closest_point = min(clicked_points, key=lambda point: (point[0] - x_val)**2 + (point[1] - y_val)**2)
-                clicked_points.remove(closest_point)
+    if ctx.triggered[0]['prop_id'] == 'btn-clear.n_clicks':
+        clicked_points = []  # Limpa todos os pontos clicados
+    else:
+        mode = 'del' if btn_toggle_clicks % 2 else 'add'
+        if clickData:
+            x_val, y_val = clickData['points'][0]['x'], clickData['points'][0]['y']
+            if mode == 'add':
+                clicked_points.append((x_val, y_val))
+            elif mode == 'del':
+                # Encontrar e remover o ponto mais próximo
+                if clicked_points:
+                    closest_point = min(clicked_points,
+                                        key=lambda point: (point[0] - x_val) ** 2 + (point[1] - y_val) ** 2)
+                    clicked_points.remove(closest_point)
 
     # Atualiza o gráfico com todos os pontos clicados
     figure['data'] = [go.Scatter(x=df_interpolado['x'], y=df_interpolado['y'], mode='lines', name='Experimental Data')] + \
                      [go.Scatter(x=[p[0] for p in clicked_points], y=[p[1] for p in clicked_points], mode='markers', marker=dict(color='red', size=10), name='Filtered Points')]
+
     return figure
-
-
 
 # Roda o app
 if __name__ == '__main__':
