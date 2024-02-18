@@ -555,14 +555,25 @@ def update_table(selected_columns, list_of_contents, list_of_names):
 ########################################################################################################################
 # Callback para alternar o modo de operação e atualizar o estilo do botão
 @app.callback(
-    [Output('btn-toggle', 'children'), Output('btn-toggle', 'style')],
-    Input('btn-toggle', 'n_clicks')
+    [Output('btn-toggle', 'children'), Output('btn-toggle', 'style'), Output('btn-toggle', 'n_clicks')],
+    [Input('btn-toggle', 'n_clicks'), Input('btn-clear', 'n_clicks')],
+    [State('btn-toggle', 'n_clicks')]
 )
-def toggle_mode(n_clicks):
-    mode = 'del' if n_clicks % 2 else 'add'
-    btn_text = "Mode: Delete" if mode == 'del' else "Mode: Add"
-    btn_style = {'backgroundColor': 'red', 'color': 'white', 'fontWeight': 'bold', 'fontSize': '20px', 'marginRight': '10px'} if mode == 'del' else {'backgroundColor': 'green', 'color': 'white', 'fontWeight': 'bold', 'fontSize': '20px', 'marginRight': '10px'}
-    return btn_text, btn_style
+
+def toggle_mode(btn_toggle_clicks, btn_clear_clicks, state_toggle_clicks):
+    triggered_by = ctx.triggered_id
+    if triggered_by == "btn-clear":
+        # Resetar para o modo "add" ao clicar em "Clear Points"
+        return "Mode: Add", {'backgroundColor': 'green', 'color': 'white', 'fontWeight': 'bold', 'fontSize': '20px',
+                             'marginRight': '10px'}, 0
+    else:
+        mode = 'del' if btn_toggle_clicks % 2 else 'add'
+        btn_text = "Mode: Delete" if mode == 'del' else "Mode: Add"
+        btn_style = {'backgroundColor': 'red', 'color': 'white', 'fontWeight': 'bold', 'fontSize': '20px',
+                     'marginRight': '10px'} if mode == 'del' else {'backgroundColor': 'green', 'color': 'white',
+                                                                   'fontWeight': 'bold', 'fontSize': '20px',
+                                                                   'marginRight': '10px'}
+        return btn_text, btn_style, state_toggle_clicks
 
 # Callback para gerar e baixar o Excel
 @app.callback(
@@ -603,6 +614,7 @@ def update_graph(clickData, btn_toggle_clicks, btn_clear_clicks, figure):
             x_val, y_val = clickData['points'][0]['x'], clickData['points'][0]['y']
             if mode == 'add':
                 clicked_points.append((x_val, y_val))
+
             elif mode == 'del':
                 # Encontrar e remover o ponto mais próximo
                 if clicked_points:

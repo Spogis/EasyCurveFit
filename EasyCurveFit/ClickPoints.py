@@ -46,7 +46,7 @@ def CreateClickLayout(Dataset, Input_Columns, Output_Columns):
             html.Button("Mode: Add", id="btn-toggle", n_clicks=0, style={'backgroundColor': 'green', 'color': 'white', 'fontWeight': 'bold', 'fontSize': '20px', 'marginRight': '10px'}),
             html.Button("Clear Points", id="btn-clear", n_clicks=0,  style={'backgroundColor': 'orange', 'color': 'white', 'fontWeight': 'bold', 'fontSize': '20px', 'marginRight': '10px'}),
             html.Button("Download Excel", id="btn-download", n_clicks=0, style={'backgroundColor': 'blue', 'color': 'white', 'fontWeight': 'bold', 'fontSize': '20px'})
-        ], style={'padding': '20px'}),
+        ], style = {'width': '100%', 'display': 'flex', 'justifyContent': 'center', 'alignItems': 'center', 'padding': '20px'}),
         dcc.Download(id="download-excel")
     ], style={'width': '80%', 'justifyContent': 'center', 'margin-left': 'auto', 'margin-right': 'auto', 'padding': '20px'})
 
