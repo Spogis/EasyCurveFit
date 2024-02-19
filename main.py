@@ -117,6 +117,7 @@ simple_layout = html.Div([
             {'label': 'Granulometric Distribution', 'value': 'Granulometric Distribution'},
             {'label': 'Nagata', 'value': 'Nagata'},
             {'label': 'Peak', 'value': 'Peak'},
+            {'label': 'Ramberg-Osgood', 'value': 'Ramberg-Osgood'},
            ],
         value='Custom Model',
         multi=False,
@@ -466,6 +467,9 @@ def WriteEquation(fit_model):
         return 'y=(a/x) + b*((10**3 + 0.6*f*(x**c)) / (10**3 + 1.6*f*(x**c)))**p'
     elif fit_model == 'Peak':
         return 'y=(b/(sqrt(1+a*((k-x)**2))))'
+    elif fit_model == 'Ramberg-Osgood':
+        return 'y=x/Young+(x/K)**n'
+
 
 @app.callback(Output('equation_input', 'value'),
               Input('equation_input', 'value'))
@@ -521,6 +525,8 @@ def CurveFit(equation_input, fit_model, only_positive_values, log_x_values, log_
         equation_input = 'y=(a/x) + b*((10**3 + 0.6*f*(x**c)) / (10**3 + 1.6*f*(x**c)))**p'
     elif fit_model == 'Peak':
         equation_input = 'y=(b/(sqrt(1+a*((k-x)**2))))'
+    elif fit_model == 'Ramberg-Osgood':
+        equation_input = 'y=x/Young+(x/K)**n'
 
     r2_str, equacao_ajustada_str, mensagem_de_erro, parametros, params_opt, desvios = EasyCurveFit(Dataset, Input_Columns, Output_Columns, equation_input,
                                                                                                    only_positive_values, log_x_values, log_y_values,

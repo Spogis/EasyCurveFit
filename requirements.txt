@@ -7,6 +7,5 @@ scipy~=1.12.0
 sympy~=1.12
 scikit-learn~=1.4.0
 openpyxl>=3.1.2
-scikit-learn~=1.4.0
 dash-bootstrap-components>=1.5.0
 pillow>=10.2.0
