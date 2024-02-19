@@ -4,6 +4,7 @@ from sklearn.metrics import mean_squared_error
 from scipy.interpolate import interp1d, UnivariateSpline
 from scipy.spatial.distance import directed_hausdorff
 from scipy.ndimage import gaussian_filter1d
+from scipy.signal import savgol_filter
 
 from EasyCurveFit.CleanData import *
 
@@ -35,7 +36,20 @@ def ramer_douglas_peucker(points, epsilon):
     else:
         return np.vstack((points[0], points[-1]))
 
+
+def smooth_data_with_savgol(x, y, window_size, poly_order):
+    # Assegura que window_size é ímpar e > 1
+    if window_size % 2 == 0:
+        window_size += 1
+
+    # Aplica o filtro de Savitzky-Golay
+    x_smooth = savgol_filter(x, window_size, poly_order)
+    y_smooth = savgol_filter(y, window_size, poly_order)
+
+    return x_smooth, y_smooth
+
 def calculate_curvature(x, y):
+    #x, y = smooth_data_with_savgol(x, y, 5, 2)
     # Calcula as primeiras derivadas
     dx = np.gradient(x)
     dy = np.gradient(y)
