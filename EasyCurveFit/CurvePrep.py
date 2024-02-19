@@ -35,20 +35,19 @@ def ramer_douglas_peucker(points, epsilon):
     else:
         return np.vstack((points[0], points[-1]))
 
-
 def calculate_curvature(x, y):
-    t = np.linspace(0, 1, len(x))
-    spl_x = UnivariateSpline(t, x, k=4, s=0)
-    spl_y = UnivariateSpline(t, y, k=4, s=0)
+    # Calcula as primeiras derivadas
+    dx = np.gradient(x)
+    dy = np.gradient(y)
 
-    dxdt = spl_x.derivative()
-    dydt = spl_y.derivative()
-    d2xdt2 = dxdt.derivative()
-    d2ydt2 = dydt.derivative()
+    # Calcula as segundas derivadas
+    ddx = np.gradient(dx)
+    ddy = np.gradient(dy)
 
-    curvature = np.abs(d2xdt2(t) * dydt(t) - dxdt(t) * d2ydt2(t)) / np.power(dxdt(t)**2 + dydt(t)**2, 1.5)
+    # Calcula a curvatura usando a fórmula
+    curvature = np.abs(dx * ddy - dy * ddx) / np.power(dx ** 2 + dy ** 2, 1.5)
+
     return curvature
-
 
 def RDP(Dataset, Input_Columns, Output_Columns, epsilon):
     Input_Plus_Output = Input_Columns + Output_Columns

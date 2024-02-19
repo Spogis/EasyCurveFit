@@ -76,14 +76,17 @@ def plot_resultado(x, y, params_opt, funcao_lambda, parametros, equacao, Output_
             print(f"Ignorado: {file_path} não é um arquivo.")
 
     i = 0
+    x_inter = np.linspace(np.min(x), np.max(x), num=1000)
+    y_inter = funcao_lambda(x_inter, *params_opt)
     y_pred = funcao_lambda(x, *params_opt)
+
     for output in Output_Columns:
         output = limpar_nome_arquivo(output)
         figure_file = 'assets/images/' + str("%02d" % (i + 1)) + ' - ' + output + '.png'
         plt.figure(1)
         plt.clf()
         plt.scatter(x, y, label='Exp. Data')
-        plt.plot(x, y_pred, label='Fit', color='red')
+        plt.plot(x_inter, y_inter, label='Fit', color='red')
         plt.xlabel(str(Input_Columns[-1]))
         plt.ylabel(str(Output_Columns[-1]))
         if log_x_values == ['True']:
