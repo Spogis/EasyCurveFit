@@ -8,18 +8,22 @@ import dash
 from dash.dependencies import Input, Output, State
 import utils.dash_reusable_components as drc
 import dash_bootstrap_components as dbc
-from dash import dcc, html
+from dash import dcc, html, ctx
 from dash import dash_table
 import plotly.graph_objs as go
+from scipy.interpolate import interp1d
 
 from EasyCurveFit.CurveFit import *
 from EasyCurveFit.CurvePrep import *
 from EasyCurveFit.Brent import *
-from EasyCurveFit.ClickPoints import *
+#from EasyCurveFit.ClickPoints import *
 
 Input_Columns = None
 Output_Columns = None
 Dataset = None
+df_interpolado = None
+df_points = None
+
 global_parametros_iniciais = None
 
 # Lista para armazenar os pontos clicados
@@ -267,9 +271,56 @@ curve_prep_layout = html.Div([
 ], style={'width': '80%', 'justifyContent': 'center', 'margin-left': 'auto', 'margin-right': 'auto', 'padding': '20px'})
 
 
+def CreateClickLayout(Dataset, Input_Columns, Output_Columns):
+    global df_interpolado
+    CreateInterpolatedDataset(Dataset, Input_Columns, Output_Columns)
+
+    click_layout = html.Div([
+        dcc.Graph(id='main-graph', figure={
+            'data': [go.Scatter(x=df_interpolado['x'], y=df_interpolado['y'], mode='lines', name='Experimental Data')],
+            'layout': go.Layout(
+                clickmode='event+select',
+                legend=dict(orientation="h", x=0.5, y=1.1, xanchor="center", yanchor="bottom")),
+        }),
+        html.Div([
+            html.Button("Mode: Add", id="btn-toggle", n_clicks=0, style={'backgroundColor': 'green', 'color': 'white', 'fontWeight': 'bold', 'fontSize': '20px', 'marginRight': '10px'}),
+            html.Button("Clear Points", id="btn-clear", n_clicks=0,  style={'backgroundColor': 'orange', 'color': 'white', 'fontWeight': 'bold', 'fontSize': '20px', 'marginRight': '10px'}),
+            html.Button("Add Limits", id="btn-limits", n_clicks=0, style={'backgroundColor': 'purple', 'color': 'white', 'fontWeight': 'bold', 'fontSize': '20px','marginRight': '10px'}),
+            html.Button("Download Excel", id="btn-download", n_clicks=0, style={'backgroundColor': 'blue', 'color': 'white', 'fontWeight': 'bold', 'fontSize': '20px'})
+        ], style = {'width': '100%', 'display': 'flex', 'justifyContent': 'center', 'alignItems': 'center', 'padding': '20px'}),
+        dcc.Download(id="download-excel")
+    ], style={'width': '80%', 'justifyContent': 'center', 'margin-left': 'auto', 'margin-right': 'auto', 'padding': '20px'})
+
+    return click_layout
+
+
+def CreateInterpolatedDataset(Dataset, Input_Columns, Output_Columns):
+    global df_interpolado
+    Input_Plus_Output = Input_Columns + Output_Columns
+    Filtered_Dataset = Dataset[Input_Plus_Output]
+
+    df = Filtered_Dataset
+    df = CleanDataset(df)
+
+    x = df[Input_Columns].values
+    x = x.squeeze()
+    y = df[Output_Columns].values
+    y = y.squeeze()
+
+    original_points = np.vstack((x, y)).T
+    df_original = pd.DataFrame(original_points, columns=['X', 'Y'])
+
+    # Criar função de interpolação
+    f = interp1d(x, y, kind='cubic')
+
+    # Gerando pontos interpolados (aqui usamos mais pontos para uma curva mais suave)
+    x_interpolado = np.linspace(np.min(x), np.max(x), num=1000)
+    y_interpolado = f(x_interpolado)
+    df_interpolado = pd.DataFrame({'x': x_interpolado, 'y': y_interpolado})
 
 def parse_contents(contents, filename):
     global Dataset
+    global clicked_points
     content_type, content_string = contents.split(',')
     decoded = base64.b64decode(content_string)
     try:
@@ -289,6 +340,7 @@ def parse_contents(contents, filename):
         ])
 
     Dataset = df
+    clicked_points = []  # Limpa todos os pontos clicados
 
     return df
 
@@ -582,6 +634,7 @@ def toggle_mode(btn_toggle_clicks, btn_clear_clicks, state_toggle_clicks):
     prevent_initial_call=True
 )
 def generate_excel(n_clicks):
+    global df_points
     df_points = pd.DataFrame(clicked_points, columns=['x', 'y'])
     df_points = df_points.sort_values(by='x', ascending=True)
     output = BytesIO()
@@ -592,20 +645,24 @@ def generate_excel(n_clicks):
 
 # Callback para adicionar ou remover pontos e atualizar o gráfico
 @app.callback(
-    Output('main-graph', 'figure'),
+    Output('main-graph', 'figure', allow_duplicate=True),
     [Input('main-graph', 'clickData'),
      Input('btn-toggle', 'n_clicks'),
      Input('btn-clear', 'n_clicks')],
-    [State('main-graph', 'figure')]
+    [State('main-graph', 'figure')],
+    prevent_initial_call=True
 )
 def update_graph(clickData, btn_toggle_clicks, btn_clear_clicks, figure):
-    df_interpolado = CreateInterpolatedDataset(Dataset, Input_Columns, Output_Columns)
+    global df_interpolado
+    global clicked_points
+
+    #df_interpolado = CreateInterpolatedDataset(Dataset, Input_Columns, Output_Columns)
 
     # Verifica o contexto do callback para determinar a entrada que acionou a atualização
     if not ctx.triggered or ctx.triggered[0]['prop_id'] == 'btn-toggle.n_clicks':
         raise dash.exceptions.PreventUpdate
 
-    global clicked_points
+
     if ctx.triggered[0]['prop_id'] == 'btn-clear.n_clicks':
         clicked_points = []  # Limpa todos os pontos clicados
     else:
@@ -626,6 +683,37 @@ def update_graph(clickData, btn_toggle_clicks, btn_clear_clicks, figure):
     figure['data'] = [go.Scatter(x=df_interpolado['x'], y=df_interpolado['y'], mode='lines', name='Experimental Data')] + \
                      [go.Scatter(x=[p[0] for p in clicked_points], y=[p[1] for p in clicked_points], mode='markers', marker=dict(color='red', size=10), name='Filtered Points')]
 
+    return figure
+
+
+@app.callback(
+    Output('main-graph', 'figure', allow_duplicate=True),
+    Input('btn-limits', 'n_clicks'),
+    [State('main-graph', 'figure')],
+    prevent_initial_call=True
+)
+def add_limits(n_clicks, figure):
+    global df_interpolado
+    global clicked_points
+
+    if n_clicks > 0:
+        # Encontrar limites
+        max_x, min_x = df_interpolado['x'].max(), df_interpolado['x'].min()
+        max_y, min_y = df_interpolado['y'].max(), df_interpolado['y'].min()
+        limit_points = [(min_x, df_interpolado[df_interpolado['x'] == min_x]['y'].iloc[0]),
+                        (max_x, df_interpolado[df_interpolado['x'] == max_x]['y'].iloc[0]),
+                        (df_interpolado[df_interpolado['y'] == min_y]['x'].iloc[0], min_y),
+                        (df_interpolado[df_interpolado['y'] == max_y]['x'].iloc[0], max_y)]
+
+        # Adicionar pontos limites sem duplicatas
+        for point in limit_points:
+            if point not in clicked_points:
+                clicked_points.append(point)
+
+        # Atualizar o gráfico com todos os pontos clicados e limites
+        figure['data'] = [go.Scatter(x=df_interpolado['x'], y=df_interpolado['y'], mode='lines', name='Dados')] + \
+                         [go.Scatter(x=[p[0] for p in clicked_points], y=[p[1] for p in clicked_points], mode='markers',
+                                     marker=dict(color='red', size=10), name='Filtered Points')]
     return figure
 
 # Roda o app
