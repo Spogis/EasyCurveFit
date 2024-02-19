@@ -118,6 +118,7 @@ simple_layout = html.Div([
             {'label': 'Nagata', 'value': 'Nagata'},
             {'label': 'Peak', 'value': 'Peak'},
             {'label': 'Ramberg-Osgood', 'value': 'Ramberg-Osgood'},
+            {'label': 'Ramberg-Osgood with Yield Strength (\u03C30)', 'value': 'Ramberg-Osgood with Yield Strength'},
            ],
         value='Custom Model',
         multi=False,
@@ -276,12 +277,25 @@ def CreateClickLayout(Dataset, Input_Columns, Output_Columns):
     global df_interpolado
     CreateInterpolatedDataset(Dataset, Input_Columns, Output_Columns)
 
+    figure = go.Figure()
+
+    # Dados filtrados
+    figure.add_trace(go.Scatter(x=df_interpolado['x'], y=df_interpolado['y'], mode='lines', name='Dados'))
+    figure.add_trace(go.Scatter(x=[p[0] for p in clicked_points], y=[p[1] for p in clicked_points], mode='markers',
+                                marker=dict(color='red', size=10), name='Filtered Points'))
+
     click_layout = html.Div([
         dcc.Graph(id='main-graph', figure={
             'data': [go.Scatter(x=df_interpolado['x'], y=df_interpolado['y'], mode='lines', name='Experimental Data')],
-            'layout': go.Layout(
-                clickmode='event+select',
-                legend=dict(orientation="h", x=0.5, y=1.1, xanchor="center", yanchor="bottom")),
+            'layout': go.Layout(clickmode='event+select',
+                                legend=dict(orientation="h", x=0.5, y=1.1, xanchor="center", yanchor="bottom"),
+                                xaxis=dict(
+                                    title=str(Input_Columns[-1])  # Define o título do eixo x
+                                ),
+                                yaxis=dict(
+                                    title=str(Output_Columns[-1])  # Define o título do eixo y
+                                )
+                                ),
         }),
         html.Div([
             html.Button("Mode: Add", id="btn-toggle", n_clicks=0, style={'backgroundColor': 'green', 'color': 'white', 'fontWeight': 'bold', 'fontSize': '20px', 'marginRight': '10px'}),
@@ -323,7 +337,7 @@ def CreateInterpolatedDataset(Dataset, Input_Columns, Output_Columns):
     df_original = pd.DataFrame(original_points, columns=['X', 'Y'])
 
     # Criar função de interpolação
-    f = interp1d(x, y, kind='cubic')
+    f = interp1d(x, y, kind='linear')
 
     # Gerando pontos interpolados (aqui usamos mais pontos para uma curva mais suave)
     x_interpolado = np.linspace(np.min(x), np.max(x), num=1000)
@@ -404,8 +418,8 @@ def atualizar_grafico(valor_slider):
     fig.add_trace(go.Scatter(x=df_simplified['X'], y=df_simplified['Y'], mode='markers', name='Filtered Data'))
 
     # Atualiza layout do gráfico
-    fig.update_layout(xaxis_title='X',
-                      yaxis_title='Y',
+    fig.update_layout(xaxis_title=str(Input_Columns[-1]),
+                      yaxis_title=str(Output_Columns[-1]),
                       legend=dict(orientation="h",
                                   x=0.5,
                                   y=1.1,
@@ -469,6 +483,8 @@ def WriteEquation(fit_model):
         return 'y=(b/(sqrt(1+a*((k-x)**2))))'
     elif fit_model == 'Ramberg-Osgood':
         return 'y=x/Young+(x/K)**n'
+    elif fit_model == 'Ramberg-Osgood with Yield Strength':
+        return 'y=x/Young+Alfa*(TauZero/Young)*(x/TauZero)**n'
 
 
 @app.callback(Output('equation_input', 'value'),
@@ -527,6 +543,8 @@ def CurveFit(equation_input, fit_model, only_positive_values, log_x_values, log_
         equation_input = 'y=(b/(sqrt(1+a*((k-x)**2))))'
     elif fit_model == 'Ramberg-Osgood':
         equation_input = 'y=x/Young+(x/K)**n'
+    elif fit_model == 'Ramberg-Osgood with Yield Strength':
+        equation_input = 'y=x/Young+Alfa*(TauZero/Young)*(x/TauZero)**n'
 
     r2_str, equacao_ajustada_str, mensagem_de_erro, parametros, params_opt, desvios = EasyCurveFit(Dataset, Input_Columns, Output_Columns, equation_input,
                                                                                                    only_positive_values, log_x_values, log_y_values,
@@ -696,9 +714,25 @@ def update_graph(clickData, btn_toggle_clicks, btn_clear_clicks, figure):
                                         key=lambda point: (point[0] - x_val) ** 2 + (point[1] - y_val) ** 2)
                     clicked_points.remove(closest_point)
 
+    figure = go.Figure()
+
+    # Dados filtrados
+    figure.add_trace(go.Scatter(x=df_interpolado['x'], y=df_interpolado['y'], mode='lines', name='Dados'))
+    figure.add_trace(go.Scatter(x=[p[0] for p in clicked_points], y=[p[1] for p in clicked_points], mode='markers',
+                                marker=dict(color='red', size=10), name='Filtered Points'))
+
+    # Atualiza layout do gráfico
+    figure.update_layout(xaxis_title=str(Input_Columns[-1]),
+                         yaxis_title=str(Output_Columns[-1]),
+                         legend=dict(orientation="h",
+                                     x=0.5,
+                                     y=1.1,
+                                     xanchor="center",
+                                     yanchor="bottom"))
+
     # Atualiza o gráfico com todos os pontos clicados
-    figure['data'] = [go.Scatter(x=df_interpolado['x'], y=df_interpolado['y'], mode='lines', name='Experimental Data')] + \
-                     [go.Scatter(x=[p[0] for p in clicked_points], y=[p[1] for p in clicked_points], mode='markers', marker=dict(color='red', size=10), name='Filtered Points')]
+    # figure['data'] = [go.Scatter(x=df_interpolado['x'], y=df_interpolado['y'], mode='lines', name='Experimental Data')] + \
+    #                  [go.Scatter(x=[p[0] for p in clicked_points], y=[p[1] for p in clicked_points], mode='markers', marker=dict(color='red', size=10), name='Filtered Points')]
 
     return figure
 
@@ -727,10 +761,27 @@ def add_limits(n_clicks, figure):
             if point not in clicked_points:
                 clicked_points.append(point)
 
+        figure = go.Figure()
+
+        # Dados filtrados
+        figure.add_trace(go.Scatter(x=df_interpolado['x'], y=df_interpolado['y'], mode='lines', name='Dados'))
+        figure.add_trace(go.Scatter(x=[p[0] for p in clicked_points], y=[p[1] for p in clicked_points], mode='markers',
+                                 marker=dict(color='red', size=10), name='Filtered Points'))
+
+        # Atualiza layout do gráfico
+        figure.update_layout(xaxis_title=str(Input_Columns[-1]),
+                             yaxis_title=str(Output_Columns[-1]),
+                             legend=dict(orientation="h",
+                                         x=0.5,
+                                         y=1.1,
+                                         xanchor="center",
+                                         yanchor="bottom"))
+
         # Atualizar o gráfico com todos os pontos clicados e limites
-        figure['data'] = [go.Scatter(x=df_interpolado['x'], y=df_interpolado['y'], mode='lines', name='Dados')] + \
-                         [go.Scatter(x=[p[0] for p in clicked_points], y=[p[1] for p in clicked_points], mode='markers',
-                                     marker=dict(color='red', size=10), name='Filtered Points')]
+        # figure['data'] = [go.Scatter(x=df_interpolado['x'], y=df_interpolado['y'], mode='lines', name='Dados')] + \
+        #                  [go.Scatter(x=[p[0] for p in clicked_points], y=[p[1] for p in clicked_points], mode='markers',
+        #                              marker=dict(color='red', size=10), name='Filtered Points')]
+
     return figure
 
 # Roda o app

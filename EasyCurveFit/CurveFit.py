@@ -64,7 +64,8 @@ def ajusta_curvas(x, y, equacao, only_positive_values, global_parametros_iniciai
     finally:
         return params_opt, funcao_lambda, parametros, mensagem_de_erro, desvios
 
-def plot_resultado(x, y, params_opt, funcao_lambda, parametros, equacao, Output_Columns, log_x_values, log_y_values):
+
+def plot_resultado(x, y, params_opt, funcao_lambda, parametros, equacao, Output_Columns, log_x_values, log_y_values, Input_Columns):
     directory_path = 'assets/images'
 
     for filename in os.listdir(directory_path):
@@ -83,7 +84,8 @@ def plot_resultado(x, y, params_opt, funcao_lambda, parametros, equacao, Output_
         plt.clf()
         plt.scatter(x, y, label='Exp. Data')
         plt.plot(x, y_pred, label='Fit', color='red')
-
+        plt.xlabel(str(Input_Columns[-1]))
+        plt.ylabel(str(Output_Columns[-1]))
         if log_x_values == ['True']:
             plt.xscale('log')
 
@@ -124,7 +126,7 @@ def EasyCurveFit(Dataset, Input_Columns, Output_Columns, equation_input,
         return "", "", mensagem_de_erro, "" , "", ""
     else:
         r2, equacao_ajustada = plot_resultado(x, y, params_opt, funcao_lambda, parametros, equacao,
-                                              Output_Columns, log_x_values, log_y_values)
+                                              Output_Columns, log_x_values, log_y_values, Input_Columns)
         return r2, equacao_ajustada, None, parametros, params_opt, desvios
 
 #parametros_iniciais = [20, 600.0, 35.0]
