@@ -301,11 +301,22 @@ def CreateInterpolatedDataset(Dataset, Input_Columns, Output_Columns):
 
     df = Filtered_Dataset
     df = CleanDataset(df)
+    df = df.drop_duplicates(keep='first')
 
     x = df[Input_Columns].values
     x = x.squeeze()
     y = df[Output_Columns].values
     y = y.squeeze()
+
+    # Convertendo x e y em um DataFrame
+    df = pd.DataFrame({'x': x, 'y': y})
+
+    # Removendo todas as duplicatas de x, mantendo a primeira ocorrência
+    df = df.drop_duplicates(subset='x', keep='first')
+
+    # Extraíndo os arrays limpos de x e y sem duplicatas
+    x = df['x'].values
+    y = df['y'].values
 
     original_points = np.vstack((x, y)).T
     df_original = pd.DataFrame(original_points, columns=['X', 'Y'])

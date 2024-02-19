@@ -7,6 +7,7 @@ def CleanDataset(df):
     df = df.dropna()
     df = df.apply(lambda x: pd.to_numeric(x, errors='coerce'))
     df = df.dropna(axis=0)
+    df = df.drop_duplicates()
     df.to_excel("assets/Dataset_No_Outliers.xlsx")
 
     return df
