@@ -20,10 +20,12 @@ from EasyCurveFit.Brent import *
 
 Input_Columns = None
 Output_Columns = None
+std_Columns = None
 Dataset = None
 df_interpolado = None
 df_points = None
 
+global_Use_Std_Values = False
 global_parametros_iniciais = None
 
 # Lista para armazenar os pontos clicados
@@ -74,11 +76,12 @@ dataset_layout = html.Div([
             'borderStyle': 'dashed',
             'borderRadius': '5px',
             'textAlign': 'center',
+            'font-size': '20px',
         },
         multiple=False
     ),
     html.Br(),
-    html.Label('Select which will be the column of independent data (X):'),
+    html.Label('Select which will be the column of independent variable (X):', style={'font-size': '20px'}),
     dcc.Dropdown(
         id='column-input-selector',
         multi=True,
@@ -90,7 +93,7 @@ dataset_layout = html.Div([
         page_size=3,
     ),
     html.Br(),
-    html.Label('Select which will be the column of dependent data (Y):'),
+    html.Label('Select which will be the column of dependent variable (Y):', style={'font-size': '20px'}),
     dcc.Dropdown(
         id='column-output-selector',
         multi=True,
@@ -101,6 +104,34 @@ dataset_layout = html.Div([
         id='output-table',
         page_size=3,
     ),
+
+    html.Br(),
+    dcc.Checklist(
+        id='std-selector',
+        options=[
+            {'label': 'Do your dependent data (Y) have different standard deviations?', 'value': ['1']},
+        ],
+        value=['0'],
+        className='custom-checkbox'  # Aplica a classe CSS personalizada
+    ),
+
+    html.Div([
+        html.Br(),
+        html.Label('Select which will be the column of dependent variable (Y) standard deviation:', style={'font-size': '20px'}),
+        dcc.Dropdown(
+            id='std-output-selector',
+            multi=True,
+            placeholder='Select the columns after loading a file'
+        ),
+        html.Br(),
+        dash_table.DataTable(
+            id='std-table',
+            page_size=3,
+        ),
+    ], id='stfd-div', style={'display': 'none'}),
+
+
+
 ], style={'width': '80%', 'justifyContent': 'center', 'margin-left': 'auto', 'margin-right': 'auto', 'padding': '20px'})
 
 simple_layout = html.Div([
@@ -119,6 +150,7 @@ simple_layout = html.Div([
             {'label': 'Peak', 'value': 'Peak'},
             {'label': 'Ramberg-Osgood', 'value': 'Ramberg-Osgood'},
             {'label': 'Ramberg-Osgood with Yield Strength (\u03C30)', 'value': 'Ramberg-Osgood with Yield Strength'},
+            {'label': 'Weibull Distribution', 'value': 'Weibull Distribution'},
            ],
         value='Custom Model',
         multi=False,
@@ -485,6 +517,8 @@ def WriteEquation(fit_model):
         return 'y=x/Young+(x/K)**n'
     elif fit_model == 'Ramberg-Osgood with Yield Strength':
         return 'y=x/Young+Alfa*(TauZero/Young)*(x/TauZero)**n'
+    elif fit_model == 'Weibull Distribution':
+        return 'y=(k/l)*((x/l)**(k-1))*exp(-(x/l)**k)'
 
 
 @app.callback(Output('equation_input', 'value'),
@@ -524,6 +558,8 @@ def update_tab_content(selected_tab):
 
 def CurveFit(equation_input, fit_model, only_positive_values, log_x_values, log_y_values, n_clicks):
     global global_parametros_iniciais
+    global global_Use_Std_Values
+    global std_Columns
 
     if fit_model == 'Custom Model':
         equation_input = equation_input
@@ -545,8 +581,14 @@ def CurveFit(equation_input, fit_model, only_positive_values, log_x_values, log_
         equation_input = 'y=x/Young+(x/K)**n'
     elif fit_model == 'Ramberg-Osgood with Yield Strength':
         equation_input = 'y=x/Young+Alfa*(TauZero/Young)*(x/TauZero)**n'
+    elif fit_model == 'Weibull Distribution':
+        equation_input = 'y=(k/l)*((x/l)**(k-1))*exp(-(x/l)**k)'
 
-    r2_str, equacao_ajustada_str, mensagem_de_erro, parametros, params_opt, desvios = EasyCurveFit(Dataset, Input_Columns, Output_Columns, equation_input,
+    print(global_Use_Std_Values)
+    if global_Use_Std_Values == False:
+        std_Columns = []
+
+    r2_str, equacao_ajustada_str, mensagem_de_erro, parametros, params_opt, desvios = EasyCurveFit(Dataset, Input_Columns, Output_Columns, std_Columns, equation_input,
                                                                                                    only_positive_values, log_x_values, log_y_values,
                                                                                                    global_parametros_iniciais)
 
@@ -601,6 +643,19 @@ def update_dropdown(list_of_contents, list_of_names):
         return [{'label': col, 'value': col} for col in df.columns], df.columns.tolist()
     return [], []
 
+
+@app.callback(
+    Output('std-output-selector', 'options'),
+    Output('std-output-selector', 'value'),
+    Input('upload-data', 'contents'),
+    State('upload-data', 'filename')
+)
+def update_dropdown(list_of_contents, list_of_names):
+    if list_of_contents is not None:
+        df = parse_contents(list_of_contents, list_of_names)
+        return [{'label': col, 'value': col} for col in df.columns], df.columns.tolist()
+    return [], []
+
 @app.callback(
     Output('input-table', 'columns'),
     Output('input-table', 'data'),
@@ -637,6 +692,24 @@ def update_table(selected_columns, list_of_contents, list_of_names):
         return columns, data
     return [], []
 
+
+@app.callback(
+    Output('std-table', 'columns'),
+    Output('std-table', 'data'),
+    Input('std-output-selector', 'value'),
+    State('upload-data', 'contents'),
+    State('upload-data', 'filename')
+)
+def update_table(selected_columns, list_of_contents, list_of_names):
+    global std_Columns
+    if list_of_contents is not None and selected_columns is not None:
+        df = parse_contents(list_of_contents, list_of_names)
+        filtered_df = df[selected_columns]
+        columns = [{"name": col, "id": col} for col in filtered_df.columns]
+        data = filtered_df.to_dict('records')
+        std_Columns = selected_columns
+        return columns, data
+    return [], []
 
 
 ########################################################################################################################
@@ -730,10 +803,6 @@ def update_graph(clickData, btn_toggle_clicks, btn_clear_clicks, figure):
                                      xanchor="center",
                                      yanchor="bottom"))
 
-    # Atualiza o gráfico com todos os pontos clicados
-    # figure['data'] = [go.Scatter(x=df_interpolado['x'], y=df_interpolado['y'], mode='lines', name='Experimental Data')] + \
-    #                  [go.Scatter(x=[p[0] for p in clicked_points], y=[p[1] for p in clicked_points], mode='markers', marker=dict(color='red', size=10), name='Filtered Points')]
-
     return figure
 
 
@@ -777,12 +846,20 @@ def add_limits(n_clicks, figure):
                                          xanchor="center",
                                          yanchor="bottom"))
 
-        # Atualizar o gráfico com todos os pontos clicados e limites
-        # figure['data'] = [go.Scatter(x=df_interpolado['x'], y=df_interpolado['y'], mode='lines', name='Dados')] + \
-        #                  [go.Scatter(x=[p[0] for p in clicked_points], y=[p[1] for p in clicked_points], mode='markers',
-        #                              marker=dict(color='red', size=10), name='Filtered Points')]
-
     return figure
+
+
+@app.callback(Output('stfd-div', 'style'),
+              Input('std-selector', 'value'))
+
+def std_show(std_selector):
+    global global_Use_Std_Values
+    if std_selector == ['0']:
+        global_Use_Std_Values = False
+        return {'display': 'none'}
+    else:
+        global_Use_Std_Values = True
+        return {'display': 'block'}
 
 # Roda o app
 if __name__ == '__main__':

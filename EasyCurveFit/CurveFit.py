@@ -29,7 +29,7 @@ def ParametersData(equation_input):
     return parametros
 
 # 3. Função para ajuste de curvas
-def ajusta_curvas(x, y, equacao, only_positive_values, global_parametros_iniciais):
+def ajusta_curvas(x, y, std, equacao, only_positive_values, global_parametros_iniciais):
     parametros = sorted(list(set([str(p) for p in sympify(equacao).free_symbols if str(p) != 'x'])))
 
     funcao = sympify(equacao)
@@ -49,9 +49,22 @@ def ajusta_curvas(x, y, equacao, only_positive_values, global_parametros_iniciai
 
     try:
         if only_positive_values == ['True']:
-            params_opt, params_cov = curve_fit(funcao_ajuste, x, y, p0=parametros_iniciais, bounds=(limite_inferior, limite_superior))
+            if len(std) == 0:
+                params_opt, params_cov = curve_fit(funcao_ajuste, x, y, p0=parametros_iniciais,
+                                                   bounds=(limite_inferior, limite_superior))
+            else:
+                std = np.array(std)
+                params_opt, params_cov = curve_fit(funcao_ajuste, x, y, sigma=std, p0=parametros_iniciais,
+                                                   bounds=(limite_inferior, limite_superior))
+
+
         else:
-            params_opt, params_cov = curve_fit(funcao_ajuste, x, y, p0=parametros_iniciais)
+            if len(std) == 0:
+                params_opt, params_cov = curve_fit(funcao_ajuste, x, y, p0=parametros_iniciais)
+            else:
+                std = np.array(std)
+                params_opt, params_cov = curve_fit(funcao_ajuste, x, y, sigma=std, p0=parametros_iniciais)
+
 
         desvios = np.sqrt(np.diag(params_cov))
         mensagem_de_erro = None
@@ -107,11 +120,15 @@ def plot_resultado(x, y, params_opt, funcao_lambda, parametros, equacao, Output_
 
     return r2, equacao_ajustada
 
-def EasyCurveFit(Dataset, Input_Columns, Output_Columns, equation_input,
+def EasyCurveFit(Dataset, Input_Columns, Output_Columns, std_Columns, equation_input,
                  only_positive_values, log_x_values, log_y_values,
                  global_parametros_iniciais):
 
-    Input_Plus_Output = Input_Columns + Output_Columns
+    if std_Columns == []:
+        Input_Plus_Output = Input_Columns + Output_Columns
+    else:
+        Input_Plus_Output = Input_Columns + Output_Columns + std_Columns
+
     Filtered_Dataset = Dataset[Input_Plus_Output]
 
     df = Filtered_Dataset
@@ -122,8 +139,14 @@ def EasyCurveFit(Dataset, Input_Columns, Output_Columns, equation_input,
     y = df[Output_Columns].values
     y = y.squeeze()
 
+    if std_Columns != []:
+        std = df[std_Columns].values
+        std = std.squeeze()
+    else:
+        std = []
+
     equacao = solicita_equacao(equation_input)
-    params_opt, funcao_lambda, parametros, mensagem_de_erro, desvios = ajusta_curvas(x, y, equacao, only_positive_values, global_parametros_iniciais)
+    params_opt, funcao_lambda, parametros, mensagem_de_erro, desvios = ajusta_curvas(x, y, std, equacao, only_positive_values, global_parametros_iniciais)
 
     if mensagem_de_erro is not None:
         return "", "", mensagem_de_erro, "" , "", ""

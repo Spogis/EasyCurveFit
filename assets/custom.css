@@ -1,0 +1,16 @@
+.custom-checkbox {
+    display: flex;
+    align-items: center; /* Isso garantirá que o checkbox e o label estejam centralizados verticalmente */
+    margin-bottom: 10px; /* Espaçamento entre as linhas de checkbox, se necessário */
+    margin-left: 10px;
+}
+
+.custom-checkbox input[type="checkbox"] {
+    transform: scale(3.0); /* Ajusta o tamanho do checkbox */
+    margin-right: 20px; /* Espaço entre o checkbox e o label */
+}
+
+.custom-checkbox label {
+    font-size: 20px; /* Ajusta o tamanho do texto */
+}
+
