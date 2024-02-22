@@ -584,7 +584,6 @@ def CurveFit(equation_input, fit_model, only_positive_values, log_x_values, log_
     elif fit_model == 'Weibull Distribution':
         equation_input = 'y=(k/l)*((x/l)**(k-1))*exp(-(x/l)**k)'
 
-    print(global_Use_Std_Values)
     if global_Use_Std_Values == False:
         std_Columns = []
 

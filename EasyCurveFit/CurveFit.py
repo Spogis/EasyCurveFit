@@ -2,6 +2,7 @@ import os
 import pandas as pd
 import numpy as np
 from scipy.optimize import curve_fit
+from scipy.stats import t
 from sympy import symbols, sympify, lambdify
 from sklearn.metrics import r2_score
 
@@ -78,7 +79,7 @@ def ajusta_curvas(x, y, std, equacao, only_positive_values, global_parametros_in
         return params_opt, funcao_lambda, parametros, mensagem_de_erro, desvios
 
 
-def plot_resultado(x, y, params_opt, funcao_lambda, parametros, equacao, Output_Columns, log_x_values, log_y_values, Input_Columns):
+def plot_resultado(x, y, params_opt, funcao_lambda, parametros, equacao, Output_Columns, log_x_values, log_y_values, Input_Columns, desvios):
     directory_path = 'assets/images'
 
     for filename in os.listdir(directory_path):
@@ -93,6 +94,24 @@ def plot_resultado(x, y, params_opt, funcao_lambda, parametros, equacao, Output_
     y_inter = funcao_lambda(x_inter, *params_opt)
     y_pred = funcao_lambda(x, *params_opt)
 
+    # Número de graus de liberdade
+    graus_liberdade = len(y) - len(params_opt)
+
+    # Calculando os intervalos de confiança para 95% de confiança
+    alpha = 0.05  # 95% intervalo de confiança
+    t_val = t.ppf(1 - alpha / 2, graus_liberdade)
+
+    # Limites dos parâmetros
+    params_conf = desvios * t_val
+
+    # Gerando as curvas para os limites dos intervalos de confiança
+    x_fit = x_inter
+    par_sup = params_opt + params_conf
+    par_inf = params_opt - params_conf
+
+    y_fit_sup = funcao_lambda(x_inter, *par_sup)
+    y_fit_inf = funcao_lambda(x_inter, *par_inf)
+
     for output in Output_Columns:
         output = limpar_nome_arquivo(output)
         figure_file = 'assets/images/' + str("%02d" % (i + 1)) + ' - ' + output + '.png'
@@ -100,6 +119,7 @@ def plot_resultado(x, y, params_opt, funcao_lambda, parametros, equacao, Output_
         plt.clf()
         plt.scatter(x, y, label='Exp. Data')
         plt.plot(x_inter, y_inter, label='Fit', color='red')
+        plt.fill_between(x_fit, y_fit_inf, y_fit_sup, color='gray', alpha=0.2, label='Confidence Interval (95%)')
         plt.xlabel(str(Input_Columns[-1]))
         plt.ylabel(str(Output_Columns[-1]))
         if log_x_values == ['True']:
@@ -152,7 +172,7 @@ def EasyCurveFit(Dataset, Input_Columns, Output_Columns, std_Columns, equation_i
         return "", "", mensagem_de_erro, "" , "", ""
     else:
         r2, equacao_ajustada = plot_resultado(x, y, params_opt, funcao_lambda, parametros, equacao,
-                                              Output_Columns, log_x_values, log_y_values, Input_Columns)
+                                              Output_Columns, log_x_values, log_y_values, Input_Columns, desvios)
         return r2, equacao_ajustada, None, parametros, params_opt, desvios
 
 #parametros_iniciais = [20, 600.0, 35.0]
