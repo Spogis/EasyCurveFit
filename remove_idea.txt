@@ -2,4 +2,5 @@ git rm --cached -r .idea
 git rm --cached .idea/
 git add .gitignore
 git commit -m "Removed .idea files"
+git reset filepath
 git push origin

@@ -865,3 +865,4 @@ if __name__ == '__main__':
     app.run_server(debug=False)
 
 ##git rm --cached -r .idea
+#mkvirtualenv myvirtualenv --python=/usr/bin/python3.9

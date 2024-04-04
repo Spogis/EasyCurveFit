@@ -94,6 +94,7 @@ def plot_resultado(x, y, params_opt, funcao_lambda, parametros, equacao, Output_
     y_inter = funcao_lambda(x_inter, *params_opt)
     y_pred = funcao_lambda(x, *params_opt)
 
+
     # Número de graus de liberdade
     graus_liberdade = len(y) - len(params_opt)
 
